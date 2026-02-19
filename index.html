@@ -8,25 +8,52 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
-        :root { --primary: #10b981; --bg: #f8fafc; --text: #334155; --card: #ffffff; }
-        body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text); }
+        :root { --primary: #10b981; --bg: #f8fafc; --text: #334155; }
+        body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text); overflow-x: hidden; }
+        
+        /* Navbar */
         nav { position: sticky; top: 0; z-index: 50; background: white; padding: 10px 15px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #eee; }
         .search-box { flex: 1; position: relative; }
         .search-box input { width: 100%; padding: 8px 35px; border-radius: 20px; border: 1px solid #ddd; outline: none; }
         .search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; }
+
+        /* Container & Grid */
         .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
-        .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
-        .card { background: var(--card); border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; transition: 0.3s; }
-        .card img { width: 100%; height: 200px; object-fit: cover; }
-        .card-info { padding: 10px; font-size: 0.85rem; }
-        .card-title { font-weight: 700; height: 35px; overflow: hidden; }
+        .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 25px; align-items: start; }
+
+        /* 3. Card UI (Real Ratio & Flat Design) */
+        .card { cursor: pointer; position: relative; transition: 0.3s; background: none; box-shadow: none; border: none; }
+        .card img { width: 100%; height: auto; display: block; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.3s; }
+        .card:hover img { transform: scale(1.02); }
+        .card-info { padding: 8px 0; text-align: left; }
+        .card-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; color: #1e293b; }
+        .card-meta { font-size: 0.8rem; color: #64748b; display: flex; align-items: center; justify-content: space-between; }
+        
+        /* 2. Download Button & Info Icon */
+        .action-btns { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 8px; opacity: 0; transition: 0.3s; }
+        .card:hover .action-btns { opacity: 1; }
+        .btn-round { background: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: none; cursor: pointer; color: var(--text); font-size: 0.8rem; }
+        .btn-round:hover { background: var(--primary); color: white; }
+
+        /* 1. PDF Reader with Flip Animation & Click Nav */
+        #reader-modal { display: none; position: fixed; inset: 0; background: #1a1a1a; z-index: 500; flex-direction: column; }
+        .toolbar { background: rgba(44, 44, 44, 0.9); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; color: white; z-index: 10; }
+        #pdf-viewport { flex: 1; overflow: hidden; display: flex; justify-content: center; align-items: center; position: relative; perspective: 1500px; }
+        
+        /* Flip Animation */
+        canvas { max-height: 90vh; max-width: 95%; box-shadow: 0 0 20px black; transition: transform 0.6s cubic-bezier(0.645, 0.045, 0.355, 1); transform-origin: left center; }
+        .page-flipping { transform: rotateY(-180deg); opacity: 0; }
+
+        /* Click Navigation Areas */
+        #nav-left, #nav-right { position: absolute; top: 0; height: 100%; width: 50%; z-index: 5; cursor: pointer; }
+        #nav-left { left: 0; }
+        #nav-right { right: 0; }
+
+        /* Ad Popup */
         #ad-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; }
         .ad-content { background: white; padding: 25px; border-radius: 15px; text-align: center; width: 85%; max-width: 400px; }
         #timer { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 15px; }
-        #reader-modal { display: none; position: fixed; inset: 0; background: #1a1a1a; z-index: 500; flex-direction: column; }
-        .toolbar { background: #2c2c2c; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; color: white; }
-        #pdf-container { flex: 1; overflow: auto; display: flex; justify-content: center; padding: 10px; }
-        canvas { max-width: 100%; box-shadow: 0 0 15px black; }
+
     </style>
 </head>
 <body>
@@ -48,18 +75,22 @@
             <h3>Please Wait</h3>
             <div id="ad-box"></div>
             <div id="timer">10</div>
-            <p>Your book is almost ready.</p>
+            <p>Your book is preparing...</p>
         </div>
     </div>
 
     <!-- PDF READER -->
     <div id="reader-modal">
         <div class="toolbar">
-            <i class="fas fa-arrow-left" onclick="history.back()" style="cursor:pointer"></i>
-            <span id="pg-info">1 / --</span>
-            <i class="fas fa-arrow-right" id="next" style="cursor:pointer"></i>
+            <i class="fas fa-times" onclick="history.back()" style="cursor:pointer; font-size: 1.2rem;"></i>
+            <span id="pg-info" style="font-weight: 600;">1 / --</span>
+            <div></div>
         </div>
-        <div id="pdf-container"><canvas id="canvas"></canvas></div>
+        <div id="pdf-viewport">
+            <div id="nav-left"></div>
+            <div id="nav-right"></div>
+            <canvas id="canvas"></canvas>
+        </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -76,35 +107,64 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // ডাটাবেস থেকে রিড করা হচ্ছে
+        // 3. Load & Grid (Flat UI)
         db.collection('books').orderBy('createdAt', 'desc').onSnapshot(snap => {
             document.getElementById('loading').style.display = 'none';
             const grid = document.getElementById('bookList'); grid.innerHTML = '';
             snap.forEach(doc => {
                 const b = doc.data();
-                grid.innerHTML += `<div class="card" onclick="startAd('${b.pdfUrl}')">
-                    <img src="${b.banner}">
-                    <div class="card-info">
+                grid.innerHTML += `
+                <div class="card">
+                    <img src="${b.banner}" onclick="startAd('${b.pdfUrl}')">
+                    <div class="action-btns">
+                        <button class="btn-round" onclick="downloadImage('${b.banner}', '${b.title}')" title="Download Image"><i class="fas fa-download"></i></button>
+                        <button class="btn-round" onclick="showInfo('${b.description || 'No description available'}')" title="Info"><i class="fas fa-info"></i></button>
+                    </div>
+                    <div class="card-info" onclick="startAd('${b.pdfUrl}')">
                         <div class="card-title">${b.title}</div>
-                        <small>${b.author} | ${b.pages} Pgs</small>
+                        <div class="card-meta">
+                            <span>${b.author}</span>
+                            <span>${b.pages} Pgs</span>
+                        </div>
                     </div>
                 </div>`;
             });
         });
 
-        document.getElementById('searchInput').oninput = (e) => {
-            const val = e.target.value.toLowerCase();
-            document.querySelectorAll('.card').forEach(c => {
-                c.style.display = c.innerText.toLowerCase().includes(val) ? 'block' : 'none';
-            });
-        };
+        // 2. Download Image with Watermark
+        async function downloadImage(url, title) {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.src = url;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                
+                // Add Watermark
+                ctx.fillStyle = "rgba(16, 185, 129, 0.8)";
+                ctx.font = `bold ${canvas.width/20}px Inter`;
+                ctx.textAlign = "right";
+                ctx.fillText("Nur's Library", canvas.width - 20, canvas.height - 20);
+                
+                const link = document.createElement('a');
+                link.download = `${title}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+            };
+        }
 
+        // 3. Info Button
+        function showInfo(desc) { alert("Description:\n" + desc); }
+
+        // 1. Ad & Flip Reader Logic
         let currentUrl = '', pdfDoc = null, pNum = 1;
+
         function startAd(url) {
             currentUrl = url; history.pushState({view: 'ad'}, '');
             document.getElementById('ad-modal').style.display = 'flex';
-            
-            // Ad Script Injection
             const adBox = document.getElementById('ad-box'); adBox.innerHTML = '';
             const sc = document.createElement('script'); sc.src = "https://pl28743379.effectivegatecpm.com/e8a4101484bcc312e8a1ce9f0d1eadac/invoke.js";
             sc.async = true; adBox.appendChild(sc);
@@ -115,12 +175,7 @@
                 time--; document.getElementById('timer').innerText = time;
                 if(time <= 0) { clearInterval(itv); document.getElementById('ad-modal').style.display = 'none'; openReader(); }
             }, 1000);
-
-            window.onpopstate = () => {
-                clearInterval(itv);
-                document.getElementById('ad-modal').style.display = 'none';
-                document.getElementById('reader-modal').style.display = 'none';
-            };
+            window.onpopstate = () => { clearInterval(itv); document.getElementById('ad-modal').style.display = 'none'; document.getElementById('reader-modal').style.display = 'none'; };
         }
 
         async function openReader() {
@@ -131,15 +186,43 @@
         }
 
         function renderPage(n) {
+            const cvs = document.getElementById('canvas');
+            cvs.classList.remove('page-flipping'); // Reset animation
+            
             pdfDoc.getPage(n).then(pg => {
-                const cvs = document.getElementById('canvas'), ctx = cvs.getContext('2d'), vp = pg.getViewport({scale: 1.5});
+                const ctx = cvs.getContext('2d'), vp = pg.getViewport({scale: 1.5});
                 cvs.height = vp.height; cvs.width = vp.width;
                 pg.render({canvasContext: ctx, viewport: vp});
                 document.getElementById('pg-info').innerText = n + " / " + pdfDoc.numPages;
             });
         }
 
-        document.getElementById('next').onclick = () => { if(pNum < pdfDoc.numPages) renderPage(++pNum); };
+        // 1. Navigation Click Control
+        document.getElementById('nav-right').onclick = () => {
+            if(pNum < pdfDoc.numPages) {
+                const cvs = document.getElementById('canvas');
+                cvs.classList.add('page-flipping');
+                setTimeout(() => {
+                    pNum++;
+                    renderPage(pNum);
+                }, 400);
+            }
+        };
+
+        document.getElementById('nav-left').onclick = () => {
+            if(pNum > 1) {
+                pNum--;
+                renderPage(pNum);
+            }
+        };
+
+        document.getElementById('searchInput').oninput = (e) => {
+            const val = e.target.value.toLowerCase();
+            document.querySelectorAll('.card').forEach(c => {
+                c.style.display = c.innerText.toLowerCase().includes(val) ? 'block' : 'none';
+            });
+        };
+
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     </script>
 </body>
