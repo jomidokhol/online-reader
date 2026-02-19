@@ -7,197 +7,79 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-
     <style>
         :root { --primary: #10b981; --dark: #111827; --light: #f3f4f6; }
         body { font-family: 'Poppins', sans-serif; background: var(--light); margin: 0; display: flex; height: 100vh; overflow: hidden; }
-
-        /* 1. SIDEBAR & HEADER */
-        .header-mobile {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 60px;
-            background: var(--dark); color: white; align-items: center; padding: 0 20px; z-index: 50;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        .sidebar {
-            width: 260px; background: var(--dark); color: white; padding: 20px;
-            display: flex; flex-direction: column; height: 100%; transition: transform 0.3s ease;
-            z-index: 100;
-        }
-        .sidebar h3 { margin-bottom: 30px; text-align: center; color: var(--primary); }
-        .nav-item {
-            padding: 12px 15px; margin-bottom: 5px; cursor: pointer; border-radius: 6px;
-            display: flex; align-items: center; gap: 10px; transition: 0.2s;
-        }
+        .sidebar { width: 260px; background: var(--dark); color: white; padding: 20px; display: flex; flex-direction: column; transition: 0.3s; z-index: 100; }
+        .nav-item { padding: 12px; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
         .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.1); color: var(--primary); }
-        
-        /* Sidebar Overlay for Mobile */
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 90; }
-
-        /* MAIN CONTENT */
-        .main { flex: 1; padding: 30px; overflow-y: auto; position: relative; }
-        .page-section { display: none; animation: fadeIn 0.3s; }
-        .page-section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* FORMS */
-        .form-box { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        input, textarea, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
-        input:focus, textarea:focus { outline: none; border-color: var(--primary); }
-        
+        .main { flex: 1; padding: 25px; overflow-y: auto; position: relative; }
+        .header-mobile { display: none; background: var(--dark); color: white; padding: 15px; justify-content: space-between; align-items: center; position: fixed; width: 100%; top: 0; z-index: 90; }
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 95; }
+        .page-section { display: none; } .page-section.active { display: block; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        input, textarea, button { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
         .btn-primary { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: 600; }
-        .btn-primary:hover { opacity: 0.9; }
-        
-        /* 3. IMAGE PREVIEW */
-        #preview-container { text-align: center; margin-top: 10px; display: none; }
-        #preview-img { max-width: 100%; max-height: 200px; border-radius: 8px; border: 2px solid #ddd; }
-
-        /* PROGRESS BAR */
-        .progress-container { width: 100%; background: #e5e7eb; height: 8px; border-radius: 4px; margin-top: 10px; display: none; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.2s; }
-        .progress-text { font-size: 0.8rem; color: var(--primary); text-align: center; margin-top: 5px; }
-
-        /* 4. TOAST NOTIFICATION */
-        #toast-box {
-            position: fixed; top: 20px; right: 20px; z-index: 200;
-        }
-        .toast {
-            background: #333; color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 10px;
-            animation: slideIn 0.3s, fadeOut 0.3s 2.7s forwards; min-width: 250px;
-        }
-        .toast.success { border-left: 5px solid var(--primary); }
-        .toast.error { border-left: 5px solid #ef4444; }
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-        @keyframes fadeOut { to { opacity: 0; transform: translateX(100%); } }
-
-        /* AUTH SCREEN */
-        #auth-screen { position: fixed; inset: 0; background: white; z-index: 300; display: flex; align-items: center; justify-content: center; }
-        .login-box { width: 320px; text-align: center; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 12px; }
-
-        /* MOBILE RESPONSIVE */
-        @media (max-width: 768px) {
-            .header-mobile { display: flex; justify-content: space-between; }
-            .sidebar { position: fixed; left: -280px; top: 0; height: 100%; width: 250px; }
-            .sidebar.active { transform: translateX(280px); }
-            .overlay.active { display: block; }
-            .main { padding-top: 80px; }
-        }
+        #preview-img { max-width: 100%; height: 150px; object-fit: contain; display: none; margin-top: 10px; border: 1px solid #eee; }
+        .progress-container { width: 100%; background: #eee; height: 8px; border-radius: 4px; display: none; margin-top: 10px; }
+        .progress-fill { height: 100%; background: var(--primary); width: 0%; border-radius: 4px; transition: 0.3s; }
+        #toast-box { position: fixed; top: 20px; right: 20px; z-index: 200; }
+        .toast { background: #333; color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        @media (max-width: 768px) { .header-mobile { display: flex; } .sidebar { position: fixed; left: -260px; top: 0; height: 100%; } .sidebar.active { left: 0; } .overlay.active { display: block; } .main { padding-top: 80px; } }
     </style>
 </head>
 <body>
-
-    <!-- 4. TOAST CONTAINER -->
     <div id="toast-box"></div>
-
-    <!-- AUTH SCREEN -->
-    <div id="auth-screen">
-        <div class="login-box">
-            <h2 style="color:var(--primary)">Nur's Admin</h2>
-            <input type="email" id="email" placeholder="Email">
+    <div id="auth-screen" style="position:fixed; inset:0; background:white; z-index:300; display:flex; align-items:center; justify-content:center;">
+        <div style="width:300px; text-align:center;">
+            <h2>Nur's Admin</h2>
+            <input type="email" id="email" placeholder="Admin Email">
             <input type="password" id="pass" placeholder="Password">
-            <button class="btn-primary" onclick="login()">Login Dashboard</button>
+            <button class="btn-primary" onclick="login()">Login</button>
         </div>
     </div>
-
-    <!-- MOBILE HEADER -->
-    <div class="header-mobile">
-        <h3>Nur's Library</h3>
-        <!-- 1. THREE DOTS/BARS MENU -->
-        <i class="fas fa-ellipsis-v" style="font-size: 1.5rem; cursor: pointer;" id="menu-btn"></i>
-    </div>
-
-    <!-- OVERLAY FOR CLOSING SIDEBAR -->
-    <div class="overlay" id="sidebar-overlay"></div>
-
-    <!-- 1. SIDEBAR -->
+    <div class="header-mobile"><h3>Nur's Library</h3><i class="fas fa-ellipsis-v" id="menu-btn"></i></div>
+    <div class="overlay" id="overlay"></div>
     <div class="sidebar" id="sidebar">
-        <h3><i class="fas fa-book-reader"></i> Nur's Library</h3>
-        
-        <div class="nav-item active" onclick="switchPage('books')">
-            <i class="fas fa-cloud-upload-alt"></i> Upload & Manage
-        </div>
-        
-        <!-- 2. SEPARATE SETTINGS PAGE LINK -->
-        <div class="nav-item" onclick="switchPage('settings')">
-            <i class="fas fa-cogs"></i> GitHub Settings
-        </div>
-
-        <div class="nav-item" onclick="logout()" style="margin-top: auto; color: #ef4444;">
-            <i class="fas fa-sign-out-alt"></i> Logout
-        </div>
+        <h3 style="color:var(--primary)">Nur's Library</h3>
+        <div class="nav-item active" onclick="switchPage('upload')"><i class="fas fa-plus"></i> Add Book</div>
+        <div class="nav-item" onclick="switchPage('settings')"><i class="fas fa-cog"></i> Settings</div>
+        <div class="nav-item" onclick="logout()" style="margin-top:auto; color:#ff4d4d;"><i class="fas fa-sign-out-alt"></i> Logout</div>
     </div>
-
-    <!-- MAIN CONTENT AREA -->
     <div class="main">
-        
-        <!-- PAGE 1: UPLOAD & MANAGE -->
-        <div id="page-books" class="page-section active">
+        <div id="page-upload" class="page-section active">
             <h2>Upload New Book</h2>
-            <div class="form-box">
+            <div class="card">
                 <input type="text" id="b-title" placeholder="Book Title">
                 <input type="text" id="b-author" placeholder="Author Name">
-                
-                <!-- 5. DESCRIPTION FIELD -->
-                <textarea id="b-desc" rows="3" placeholder="Book Description (Optional)"></textarea>
-
-                <label style="font-size:0.9rem; color:#666; margin-top:10px; display:block;">Book Banner (Image)</label>
-                <input type="file" id="b-banner" accept="image/*" onchange="previewBanner(event)">
-                
-                <!-- 3. BANNER PREVIEW -->
-                <div id="preview-container">
-                    <img id="preview-img" src="" alt="Banner Preview">
-                </div>
-
-                <label style="font-size:0.9rem; color:#666; margin-top:10px; display:block;">PDF File</label>
+                <textarea id="b-desc" placeholder="Short Description"></textarea>
+                <label>Banner Image (Preview):</label>
+                <input type="file" id="b-banner" accept="image/*" onchange="previewImg(event)">
+                <img id="preview-img">
+                <label>PDF File (Upload to GitHub):</label>
                 <input type="file" id="b-pdf" accept="application/pdf">
-
-                <!-- Progress Bar -->
-                <div class="progress-container" id="prog-cont">
-                    <div class="progress-fill" id="prog-bar"></div>
-                </div>
-                <div class="progress-text" id="prog-text"></div>
-
-                <button class="btn-primary" onclick="uploadBook()" style="margin-top: 15px;">
-                    <i class="fas fa-upload"></i> Upload Book
-                </button>
+                <div class="progress-container" id="prog-cont"><div class="progress-fill" id="prog-bar"></div></div>
+                <p id="prog-text" style="font-size:0.8rem; color:var(--primary); text-align:center;"></p>
+                <button class="btn-primary" onclick="uploadBook()">Upload & Save to Database</button>
             </div>
-
-            <h3>All Books</h3>
-            <div id="book-list">Loading books...</div>
+            <h3>Book Database</h3>
+            <div id="book-list"></div>
         </div>
-
-        <!-- PAGE 2: GITHUB SETTINGS -->
         <div id="page-settings" class="page-section">
-            <h2>GitHub Configuration</h2>
-            <div class="form-box">
-                <p style="color:#666; font-size:0.9rem; margin-bottom:20px;">
-                    Manage your GitHub repository connection for PDF storage.
-                </p>
-                
-                <label>GitHub Username (Owner)</label>
-                <input type="text" id="gh-owner" placeholder="e.g. nur-code">
-                
-                <label>Repository Name</label>
-                <input type="text" id="gh-repo" placeholder="e.g. my-library-pdfs">
-                
-                <label>Personal Access Token (Repo Scope)</label>
-                <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx">
-                
-                <button class="btn-primary" onclick="saveSettings()">
-                    <i class="fas fa-save"></i> Save Configuration
-                </button>
+            <h2>GitHub Settings</h2>
+            <div class="card">
+                <input type="text" id="gh-owner" placeholder="GitHub Username">
+                <input type="text" id="gh-repo" placeholder="Repo Name">
+                <input type="password" id="gh-token" placeholder="GitHub Token">
+                <button class="btn-primary" onclick="saveSettings()">Save Config</button>
             </div>
         </div>
-
     </div>
 
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-
     <script>
-        // CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyDu8VDVXEbrLbqPmD24OPgNhbH5xjwi_vA",
             authDomain: "we4usnur.firebaseapp.com",
@@ -207,263 +89,92 @@
             appId: "1:1069907132834:web:f6aec92fc61c413767f2fb"
         };
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+        const auth = firebase.auth(), db = firebase.firestore();
 
-        // --- 1. SIDEBAR TOGGLE LOGIC ---
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebar-overlay');
-        const menuBtn = document.getElementById('menu-btn');
+        document.getElementById('menu-btn').onclick = () => { document.getElementById('sidebar').classList.add('active'); document.getElementById('overlay').classList.add('active'); };
+        document.getElementById('overlay').onclick = () => { document.getElementById('sidebar').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); };
 
-        menuBtn.addEventListener('click', () => {
-            sidebar.classList.add('active');
-            overlay.classList.add('active');
-        });
-
-        // Close when clicking overlay (Outside Touch)
-        overlay.addEventListener('click', () => {
-            sidebar.classList.remove('active');
-            overlay.classList.remove('active');
-        });
-
-        // --- 2. PAGE NAVIGATION ---
-        function switchPage(pageId) {
-            // Hide all pages
-            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            
-            // Show selected
-            document.getElementById(`page-${pageId}`).classList.add('active');
-            
-            // Highlight nav
-            const navIndex = pageId === 'books' ? 0 : 1;
-            document.querySelectorAll('.nav-item')[navIndex].classList.add('active');
-
-            // If mobile, close sidebar after selection
-            if(window.innerWidth <= 768) {
-                sidebar.classList.remove('active');
-                overlay.classList.remove('active');
-            }
-
-            // Load settings if opening settings page
-            if(pageId === 'settings') loadSettings();
+        function switchPage(p) {
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+            document.getElementById('page-' + p).classList.add('active');
+            if(p === 'settings') loadSettings();
         }
 
-        // --- 3. BANNER PREVIEW ---
-        function previewBanner(event) {
-            const file = event.target.files[0];
-            const previewBox = document.getElementById('preview-container');
+        function previewImg(e) {
             const img = document.getElementById('preview-img');
-            
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    img.src = e.target.result;
-                    previewBox.style.display = 'block';
-                }
-                reader.readAsDataURL(file);
-            } else {
-                previewBox.style.display = 'none';
-            }
+            img.src = URL.createObjectURL(e.target.files[0]); img.style.display = 'block';
         }
 
-        // --- 4. TOAST NOTIFICATION SYSTEM ---
-        function showToast(msg, type = 'success') {
-            const box = document.getElementById('toast-box');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${msg}`;
-            box.appendChild(toast);
-            
-            // Auto remove after animation (3s)
-            setTimeout(() => { toast.remove(); }, 3000);
+        function showToast(m) {
+            const t = document.createElement('div'); t.className = 'toast'; t.innerText = m;
+            document.getElementById('toast-box').appendChild(t); setTimeout(() => t.remove(), 3000);
         }
 
-        // --- AUTH & DATA LOGIC ---
-        auth.onAuthStateChanged(u => {
-            document.getElementById('auth-screen').style.display = u ? 'none' : 'flex';
-            if(u) loadBooks();
-        });
-
-        function login() {
-            auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value)
-                .then(() => showToast("Login Successful"))
-                .catch(e => showToast(e.message, 'error'));
-        }
+        auth.onAuthStateChanged(u => { document.getElementById('auth-screen').style.display = u ? 'none' : 'flex'; if(u) loadBooks(); });
+        function login() { auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value).catch(e => showToast(e.message)); }
         function logout() { auth.signOut(); }
 
-        // --- BOOK UPLOAD ---
-        async function uploadBook() {
-            const title = document.getElementById('b-title').value;
-            const author = document.getElementById('b-author').value;
-            const desc = document.getElementById('b-desc').value; // 5. Get Description
-            const bannerFile = document.getElementById('b-banner').files[0];
-            const pdfFile = document.getElementById('b-pdf').files[0];
-
-            if(!title || !pdfFile || !bannerFile) return showToast("Please fill all required fields", "error");
-
-            const btn = document.querySelector('.btn-primary');
-            const progCont = document.getElementById('prog-cont');
-            const progBar = document.getElementById('prog-bar');
-            const progText = document.getElementById('prog-text');
-
-            btn.disabled = true;
-            progCont.style.display = 'block';
-            progText.innerText = "Processing Files...";
-
-            try {
-                // Get GitHub Config
-                const configDoc = await db.collection('settings').doc('github').get();
-                if(!configDoc.exists) throw new Error("GitHub Settings not configured!");
-                const config = configDoc.data();
-
-                // Process Files
-                const bannerBase64 = await toBase64(bannerFile);
-                
-                // Get PDF Info
-                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-                const arrayBuffer = await pdfFile.arrayBuffer();
-                const pdfDoc = await pdfjsLib.getDocument(arrayBuffer).promise;
-                const pages = pdfDoc.numPages;
-                const pdfBase64 = await toBase64(pdfFile);
-                const pdfContent = pdfBase64.split(',')[1];
-
-                // GitHub Upload
-                const fileName = `pdf/${Date.now()}_${pdfFile.name.replace(/\s/g, '_')}`;
-                const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${fileName}`;
-
-                progText.innerText = "Uploading to GitHub...";
-                
-                await new Promise((resolve, reject) => {
-                    const xhr = new XMLHttpRequest();
-                    xhr.open("PUT", url);
-                    xhr.setRequestHeader("Authorization", `token ${config.token}`);
-                    xhr.setRequestHeader("Content-Type", "application/json");
-
-                    xhr.upload.onprogress = (e) => {
-                        if (e.lengthComputable) {
-                            const percent = (e.loaded / e.total) * 100;
-                            progBar.style.width = percent + "%";
-                            progText.innerText = `Uploading: ${Math.round(percent)}%`;
-                        }
-                    };
-
-                    xhr.onload = () => {
-                        if (xhr.status >= 200 && xhr.status < 300) resolve();
-                        else reject("GitHub Error: " + xhr.responseText);
-                    };
-                    xhr.onerror = () => reject("Network Error");
-
-                    xhr.send(JSON.stringify({
-                        message: `Add book: ${title}`,
-                        content: pdfContent,
-                        branch: config.branch || 'main'
-                    }));
-                });
-
-                // Save to Firestore
-                const rawUrl = `https://raw.githubusercontent.com/${config.owner}/${config.repo}/${config.branch || 'main'}/${fileName}`;
-                
-                await db.collection('books').add({
-                    title, author, 
-                    description: desc, // 5. Save Description
-                    banner: bannerBase64,
-                    pdfUrl: rawUrl,
-                    pages: pages,
-                    createdAt: new Date().toISOString()
-                });
-
-                showToast("Book Uploaded Successfully!");
-                
-                // Reset Form
-                document.getElementById('b-title').value = '';
-                document.getElementById('b-author').value = '';
-                document.getElementById('b-desc').value = '';
-                document.getElementById('b-banner').value = '';
-                document.getElementById('b-pdf').value = '';
-                document.getElementById('preview-container').style.display = 'none';
-
-            } catch (err) {
-                showToast(err.message || err, "error");
-                console.error(err);
-            } finally {
-                btn.disabled = false;
-                progCont.style.display = 'none';
-                progBar.style.width = "0%";
-            }
-        }
-
-        // --- SETTINGS LOGIC ---
         async function loadSettings() {
-            try {
-                const doc = await db.collection('settings').doc('github').get();
-                if(doc.exists) {
-                    const data = doc.data();
-                    document.getElementById('gh-owner').value = data.owner || '';
-                    document.getElementById('gh-repo').value = data.repo || '';
-                    document.getElementById('gh-token').value = data.token || '';
-                }
-            } catch(e) {
-                showToast("Error loading settings", "error");
-            }
+            const d = await db.collection('settings').doc('github').get();
+            if(d.exists) { document.getElementById('gh-owner').value = d.data().owner; document.getElementById('gh-repo').value = d.data().repo; document.getElementById('gh-token').value = d.data().token; }
+        }
+        function saveSettings() {
+            db.collection('settings').doc('github').set({ owner: document.getElementById('gh-owner').value, repo: document.getElementById('gh-repo').value, token: document.getElementById('gh-token').value, branch: 'main' }).then(() => showToast("Config Saved"));
         }
 
-        async function saveSettings() {
-            const owner = document.getElementById('gh-owner').value;
-            const repo = document.getElementById('gh-repo').value;
-            const token = document.getElementById('gh-token').value;
-
-            if(!owner || !repo || !token) return showToast("All settings required", "error");
+        async function uploadBook() {
+            const title = document.getElementById('b-title').value, author = document.getElementById('b-author').value, desc = document.getElementById('b-desc').value, bFile = document.getElementById('b-banner').files[0], pFile = document.getElementById('b-pdf').files[0];
+            if(!title || !pFile || !bFile) return showToast("Title, Banner and PDF required");
+            
+            const btn = document.querySelector('.btn-primary'); btn.disabled = true;
+            document.getElementById('prog-cont').style.display = 'block';
 
             try {
-                await db.collection('settings').doc('github').set({
-                    owner, repo, token, branch: 'main'
-                });
-                showToast("Configuration Saved!");
-            } catch(e) {
-                showToast("Error saving settings", "error");
-            }
+                const confSnap = await db.collection('settings').doc('github').get();
+                if(!confSnap.exists) throw new Error("GitHub Settings missing!");
+                const conf = confSnap.data();
+
+                const b64Banner = await toB64(bFile);
+                const pdfData = await pFile.arrayBuffer();
+                const pdfPages = (await pdfjsLib.getDocument(pdfData).promise).numPages;
+                const pdfB64 = (await toB64(pFile)).split(',')[1];
+
+                const fileName = `pdf/${Date.now()}_${pFile.name.replace(/\s/g, '_')}`;
+                const apiUrl = `https://api.github.com/repos/${conf.owner}/${conf.repo}/contents/${fileName}`;
+
+                const xhr = new XMLHttpRequest();
+                xhr.open("PUT", apiUrl);
+                xhr.setRequestHeader("Authorization", `token ${conf.token}`);
+                xhr.upload.onprogress = (e) => { 
+                    const p = Math.round((e.loaded / e.total) * 100);
+                    document.getElementById('prog-bar').style.width = p + "%";
+                    document.getElementById('prog-text').innerText = p + "% Uploading...";
+                };
+                xhr.onload = async () => {
+                    const pdfUrl = `https://raw.githubusercontent.com/${conf.owner}/${conf.repo}/main/${fileName}`;
+                    // ডাটাবেসে সেভ হচ্ছে
+                    await db.collection('books').add({ title, author, description: desc, banner: b64Banner, pdfUrl, pages: pdfPages, createdAt: new Date().toISOString() });
+                    showToast("Uploaded Successfully!");
+                    setTimeout(() => location.reload(), 1000);
+                };
+                xhr.send(JSON.stringify({ message: "Add PDF", content: pdfB64 }));
+            } catch(e) { showToast(e.message); btn.disabled = false; }
         }
 
-        // --- HELPER FUNCTIONS ---
-        function toBase64(file) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.readAsDataURL(file);
-            });
-        }
+        function toB64(f) { return new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result); rd.readAsDataURL(f); }); }
 
         function loadBooks() {
             db.collection('books').orderBy('createdAt', 'desc').onSnapshot(snap => {
-                const list = document.getElementById('book-list');
-                list.innerHTML = '';
+                const l = document.getElementById('book-list'); l.innerHTML = '';
                 snap.forEach(doc => {
-                    const b = doc.data();
-                    list.innerHTML += `
-                    <div style="background:white; padding:15px; margin-bottom:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <img src="${b.banner}" style="width:40px; height:50px; object-fit:cover; border-radius:4px;">
-                            <div>
-                                <strong>${b.title}</strong> <small>(${b.pages} pgs)</small><br>
-                                <span style="font-size:0.8rem; color:#666;">${b.author}</span>
-                            </div>
-                        </div>
-                        <button onclick="deleteBook('${doc.id}')" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                    l.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span><b>${doc.data().title}</b></span>
+                        <button onclick="db.collection('books').doc('${doc.id}').delete()" style="width:auto; background:red; color:white; border:none; padding:5px 10px; border-radius:5px;">Delete</button>
                     </div>`;
                 });
             });
         }
-
-        function deleteBook(id) {
-            if(confirm("Delete this book?")) {
-                db.collection('books').doc(id).delete()
-                  .then(() => showToast("Book deleted"))
-                  .catch(e => showToast(e.message, "error"));
-            }
-        }
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     </script>
 </body>
 </html>
