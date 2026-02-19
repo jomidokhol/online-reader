@@ -3,330 +3,239 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Library Admin</title>
+    <title>Admin | Nur's Library</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
     <style>
-        :root { --primary: #2563eb; --danger: #ef4444; --success: #10b981; --sidebar: #1e293b; }
+        body { font-family: 'Poppins', sans-serif; background: #f3f4f6; margin: 0; display: flex; height: 100vh; }
+        .sidebar { width: 250px; background: #111827; color: white; padding: 20px; display: flex; flex-direction: column; }
+        .main { flex: 1; padding: 30px; overflow-y: auto; }
         
-        body { font-family: 'Poppins', sans-serif; background: #f1f5f9; margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* Auth Screen */
-        #auth-screen {
-            position: fixed; inset: 0; background: #fff; z-index: 1000;
-            display: flex; justify-content: center; align-items: center;
+        .upload-box {
+            border: 2px dashed #cbd5e1; padding: 30px; background: white; border-radius: 10px;
+            text-align: center; margin-bottom: 20px;
         }
-        .login-box { padding: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-radius: 12px; width: 350px; text-align: center; }
-        input { width: 90%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; }
-        
-        /* Dashboard Layout */
-        #dashboard { display: none; width: 100%; height: 100%; }
-        .sidebar { width: 250px; background: var(--sidebar); color: white; padding: 20px; display: flex; flex-direction: column; }
-        .sidebar h2 { margin-bottom: 30px; }
-        .nav-item { padding: 12px; margin-bottom: 5px; cursor: pointer; border-radius: 6px; transition: 0.3s; }
-        .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.1); }
-        .main-content { flex: 1; padding: 30px; overflow-y: auto; position: relative; }
-        
-        /* Book List */
-        .book-row { 
-            background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px;
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); animation: fadeUp 0.5s ease;
-        }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Modal & Forms */
-        .modal {
-            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-            justify-content: center; align-items: center; z-index: 50;
-        }
-        .modal-content { background: white; padding: 2rem; border-radius: 12px; width: 500px; max-width: 90%; }
-        
-        .upload-area {
-            border: 2px dashed #cbd5e1; padding: 20px; text-align: center; margin: 10px 0;
-            border-radius: 8px; cursor: pointer; transition: 0.3s;
-        }
-        .upload-area:hover { border-color: var(--primary); background: #f8fafc; }
-        
-        /* Buttons */
-        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; color: white; font-size: 14px; }
-        .btn-primary { background: var(--primary); }
-        .btn-danger { background: var(--danger); }
-        .fab {
-            position: absolute; bottom: 30px; right: 30px; width: 60px; height: 60px;
-            background: var(--primary); border-radius: 50%; display: flex; 
-            align-items: center; justify-content: center; color: white; font-size: 24px;
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4); cursor: pointer; transition: transform 0.2s;
-        }
-        .fab:hover { transform: scale(1.1); }
+        input, button { padding: 10px; width: 100%; margin: 5px 0; border-radius: 5px; border: 1px solid #ddd; }
+        .btn-primary { background: #10b981; color: white; border: none; cursor: pointer; }
+        .btn-primary:hover { background: #059669; }
 
         /* Progress Bar */
-        .progress-container { width: 100%; background-color: #e0e0e0; border-radius: 8px; margin-top: 10px; display: none; }
-        .progress-bar { width: 0%; height: 8px; background-color: var(--success); border-radius: 8px; transition: width 0.3s; }
+        .progress-container { width: 100%; background: #e5e7eb; height: 10px; border-radius: 5px; margin-top: 10px; display: none; }
+        .progress-fill { height: 100%; background: #10b981; width: 0%; border-radius: 5px; transition: width 0.2s; }
+        .progress-text { font-size: 0.8rem; color: #10b981; text-align: right; }
+
+        .book-item { background: white; padding: 10px; margin-bottom: 5px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+        #auth-screen { position: fixed; inset: 0; background: white; z-index: 99; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
-    <!-- Auth -->
+    <!-- LOGIN -->
     <div id="auth-screen">
-        <div class="login-box">
+        <div style="width: 300px; text-align: center;">
             <h2>Admin Login</h2>
             <input type="email" id="email" placeholder="Email">
-            <input type="password" id="password" placeholder="Password">
-            <button class="btn btn-primary" onclick="login()">Login</button>
+            <input type="password" id="pass" placeholder="Password">
+            <button class="btn-primary" onclick="login()">Login</button>
         </div>
     </div>
 
-    <!-- Dashboard -->
-    <div id="dashboard">
-        <div class="sidebar">
-            <h2>LibAdmin</h2>
-            <div class="nav-item active"><i class="fas fa-book"></i> Books</div>
-            <div class="nav-item" onclick="promptGitHubConfig()"><i class="fas fa-cogs"></i> Settings</div>
-            <div class="nav-item" style="margin-top: auto;" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</div>
-        </div>
-        <div class="main-content">
-            <h1>Book Management</h1>
-            <div id="book-list-container">Loading...</div>
-            <div class="fab" onclick="openModal()"><i class="fas fa-plus"></i></div>
-        </div>
+    <!-- DASHBOARD -->
+    <div class="sidebar">
+        <h3>Nur's Library</h3>
+        <p onclick="showSettings()" style="cursor:pointer"><i class="fas fa-cog"></i> GitHub Settings</p>
+        <p onclick="logout()" style="cursor:pointer; margin-top: auto;"><i class="fas fa-sign-out-alt"></i> Logout</p>
     </div>
 
-    <!-- Add/Edit Modal -->
-    <div class="modal" id="bookModal">
-        <div class="modal-content">
-            <h3 id="modal-title">Add New Book</h3>
-            <input type="text" id="book-title" placeholder="Book Title">
-            <input type="text" id="book-author" placeholder="Author Name">
+    <div class="main">
+        <h2>Upload New Book</h2>
+        <div class="upload-box">
+            <input type="text" id="b-title" placeholder="Book Title">
+            <input type="text" id="b-author" placeholder="Author Name">
+            <p style="text-align:left; font-size:0.9rem; margin:5px 0;">Banner Image:</p>
+            <input type="file" id="b-banner" accept="image/*">
+            <p style="text-align:left; font-size:0.9rem; margin:5px 0;">PDF File:</p>
+            <input type="file" id="b-pdf" accept="application/pdf">
             
-            <label>Cover Image</label>
-            <input type="file" id="cover-file" accept="image/*">
-            
-            <label>PDF File (Uploads to GitHub)</label>
-            <div class="upload-area" id="drop-zone">
-                <i class="fas fa-cloud-upload-alt"></i>
-                <p>Drag PDF here or Click</p>
-                <input type="file" id="pdf-file" accept="application/pdf" style="display:none">
+            <!-- Progress Bar -->
+            <div class="progress-container" id="prog-cont">
+                <div class="progress-fill" id="prog-bar"></div>
             </div>
-            <div class="progress-container" id="progress-cont"><div class="progress-bar" id="prog-bar"></div></div>
-            
-            <div style="text-align: right; margin-top: 20px;">
-                <button class="btn btn-danger" onclick="closeModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveBook()">Save Book</button>
-            </div>
+            <div class="progress-text" id="prog-text"></div>
+
+            <button class="btn-primary" onclick="uploadBook()" style="margin-top: 15px;">Upload & Save</button>
         </div>
+
+        <h3>Book List</h3>
+        <div id="book-list"></div>
     </div>
 
-    <!-- Firebase SDKs -->
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 
     <script>
-        // --- 1. CONFIGURATION ---
         const firebaseConfig = {
-  apiKey: "AIzaSyDu8VDVXEbrLbqPmD24OPgNhbH5xjwi_vA",
-  authDomain: "we4usnur.firebaseapp.com",
-  projectId: "we4usnur",
-  storageBucket: "we4usnur.firebasestorage.app",
-  messagingSenderId: "1069907132834",
-  appId: "1:1069907132834:web:f6aec92fc61c413767f2fb",
-  measurementId: "G-LZCCHNFRSN"
+            apiKey: "AIzaSyDu8VDVXEbrLbqPmD24OPgNhbH5xjwi_vA",
+            authDomain: "we4usnur.firebaseapp.com",
+            projectId: "we4usnur",
+            storageBucket: "we4usnur.firebasestorage.app",
+            messagingSenderId: "1069907132834",
+            appId: "1:1069907132834:web:f6aec92fc61c413767f2fb"
         };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // --- 2. AUTHENTICATION ---
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'flex';
-                loadBooks();
-            } else {
-                document.getElementById('auth-screen').style.display = 'flex';
-                document.getElementById('dashboard').style.display = 'none';
-            }
+        // Auth Logic
+        auth.onAuthStateChanged(u => {
+            document.getElementById('auth-screen').style.display = u ? 'none' : 'flex';
+            if(u) loadBooks();
         });
-
         function login() {
-            const e = document.getElementById('email').value;
-            const p = document.getElementById('password').value;
-            auth.signInWithEmailAndPassword(e, p).catch(alert);
+            auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value)
+                .catch(e => alert(e.message));
         }
         function logout() { auth.signOut(); }
 
-        // --- 3. BOOK MANAGEMENT ---
-        function loadBooks() {
-            db.collection('books').orderBy('createdAt', 'desc').onSnapshot(snap => {
-                const container = document.getElementById('book-list-container');
-                container.innerHTML = '';
-                snap.forEach(doc => {
-                    const b = doc.data();
-                    const div = document.createElement('div');
-                    div.className = 'book-row';
-                    div.innerHTML = `
-                        <div>
-                            <strong>${b.title}</strong><br>
-                            <small>${b.author}</small>
-                        </div>
-                        <button class="btn btn-danger" onclick="deleteBook('${doc.id}')"><i class="fas fa-trash"></i></button>
-                    `;
-                    container.appendChild(div);
-                });
-            });
-        }
+        // PDF Helper: Count Pages & Convert Base64
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-        async function saveBook() {
-            const title = document.getElementById('book-title').value;
-            const author = document.getElementById('book-author').value;
-            const coverInput = document.getElementById('cover-file');
-            const pdfInput = document.getElementById('pdf-file');
-
-            if (!title || !author) return alert("Fill required fields");
-
-            const saveBtn = document.querySelector('.btn-primary');
-            saveBtn.innerText = "Processing...";
-            saveBtn.disabled = true;
-
-            try {
-                // 1. Process Banner (Convert to Base64 for simplicity in this demo, usually Storage is better)
-                let bannerURL = "";
-                if(coverInput.files[0]) {
-                    bannerURL = await toBase64(coverInput.files[0]);
-                }
-
-                // 2. Process PDF (Upload to GitHub)
-                let pdfURL = "";
-                if(pdfInput.files[0]) {
-                    updateProgress(20);
-                    pdfURL = await uploadToGitHub(pdfInput.files[0]);
-                    updateProgress(100);
-                }
-
-                // 3. Save to Firestore
-                await db.collection('books').add({
-                    title,
-                    author,
-                    bannerURL, // Storing base64 string directly (limitations apply)
-                    pdfURL,
-                    createdAt: new Date().toISOString()
-                });
-
-                closeModal();
-                alert("Book Added!");
-
-            } catch (err) {
-                console.error(err);
-                alert("Error: " + err.message);
-            } finally {
-                saveBtn.innerText = "Save Book";
-                saveBtn.disabled = false;
-                updateProgress(0, false);
-            }
-        }
-
-        async function deleteBook(id) {
-            if(confirm("Delete this book?")) {
-                await db.collection('books').doc(id).delete();
-            }
-        }
-
-        // --- 4. GITHUB INTEGRATION ---
-        
-        async function getGitHubConfig() {
-            // Fetch config stored in Firestore (settings collection)
-            const doc = await db.collection('settings').doc('github').get();
-            if (!doc.exists) throw new Error("GitHub settings not found. Click Settings to configure.");
-            return doc.data();
-        }
-
-        async function uploadToGitHub(file) {
-            const config = await getGitHubConfig();
-            const content = await toBase64(file);
-            const contentClean = content.split(',')[1]; // Remove data:application/pdf;base64,
-            
-            const fileName = `books/${Date.now()}_${file.name.replace(/\s/g, '_')}`;
-            const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${fileName}`;
-
-            const response = await fetch(url, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `token ${config.token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: `Upload book: ${file.name}`,
-                    content: contentClean,
-                    branch: config.branch || 'main'
-                })
-            });
-
-            if (!response.ok) throw new Error("GitHub Upload Failed");
-            
-            const data = await response.json();
-            // Return the raw URL (via jsdelivr or raw.githubusercontent to avoid MIME type issues)
-            return `https://raw.githubusercontent.com/${config.owner}/${config.repo}/${config.branch || 'main'}/${fileName}`;
-        }
-
-        async function promptGitHubConfig() {
-            const owner = prompt("GitHub Username/Org:");
-            const repo = prompt("Repository Name:");
-            const token = prompt("Personal Access Token:");
-            
-            if(owner && repo && token) {
-                await db.collection('settings').doc('github').set({
-                    owner, repo, token, branch: 'main'
-                });
-                alert("Settings Saved!");
-            }
-        }
-
-        // --- 5. UTILITIES ---
-        
-        // Modal Logic
-        const modal = document.getElementById('bookModal');
-        const dropZone = document.getElementById('drop-zone');
-        const pdfInput = document.getElementById('pdf-file');
-
-        function openModal() { modal.style.display = 'flex'; }
-        function closeModal() { modal.style.display = 'none'; clearForm(); }
-        
-        dropZone.onclick = () => pdfInput.click();
-        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.style.background = '#e2e8f0'; };
-        dropZone.ondrop = (e) => {
-            e.preventDefault();
-            dropZone.style.background = 'white';
-            pdfInput.files = e.dataTransfer.files;
-            dropZone.querySelector('p').innerText = pdfInput.files[0].name;
-        };
-        pdfInput.onchange = () => dropZone.querySelector('p').innerText = pdfInput.files[0].name;
-
-        function updateProgress(percent, show = true) {
-            const cont = document.getElementById('progress-cont');
-            const bar = document.getElementById('prog-bar');
-            cont.style.display = show ? 'block' : 'none';
-            bar.style.width = percent + '%';
+        async function getPdfInfo(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+            return {
+                pages: pdf.numPages,
+                base64: await toBase64(file)
+            };
         }
 
         function toBase64(file) {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 const reader = new FileReader();
-                reader.readAsDataURL(file);
                 reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
             });
         }
 
-        function clearForm() {
-            document.getElementById('book-title').value = '';
-            document.getElementById('book-author').value = '';
-            document.getElementById('cover-file').value = '';
-            document.getElementById('pdf-file').value = '';
-            document.querySelector('#drop-zone p').innerText = "Drag PDF here or Click";
+        // Upload Logic
+        async function uploadBook() {
+            const title = document.getElementById('b-title').value;
+            const author = document.getElementById('b-author').value;
+            const bannerFile = document.getElementById('b-banner').files[0];
+            const pdfFile = document.getElementById('b-pdf').files[0];
+
+            if(!title || !pdfFile || !bannerFile) return alert("All fields required");
+
+            const btn = document.querySelector('.btn-primary');
+            const progCont = document.getElementById('prog-cont');
+            const progBar = document.getElementById('prog-bar');
+            const progText = document.getElementById('prog-text');
+
+            btn.disabled = true;
+            progCont.style.display = 'block';
+            progText.innerText = "Processing File & Counting Pages...";
+
+            try {
+                // 1. Banner to Base64
+                const bannerBase64 = await toBase64(bannerFile);
+
+                // 2. PDF Info (Pages & Base64)
+                const pdfInfo = await getPdfInfo(pdfFile);
+                const pdfBase64Clean = pdfInfo.base64.split(',')[1];
+
+                // 3. GitHub Upload with XHR for Progress
+                const configDoc = await db.collection('settings').doc('github').get();
+                if(!configDoc.exists) throw new Error("GitHub settings not found!");
+                const config = configDoc.data();
+
+                const fileName = `pdf/${Date.now()}_${pdfFile.name.replace(/\s/g, '_')}`; // Added pdf/ folder
+                const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${fileName}`;
+
+                progText.innerText = "Uploading to GitHub...";
+
+                await new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open("PUT", url);
+                    xhr.setRequestHeader("Authorization", `token ${config.token}`);
+                    xhr.setRequestHeader("Content-Type", "application/json");
+
+                    xhr.upload.onprogress = (e) => {
+                        if (e.lengthComputable) {
+                            const percent = (e.loaded / e.total) * 100;
+                            progBar.style.width = percent + "%";
+                            progText.innerText = `Uploading: ${Math.round(percent)}%`;
+                        }
+                    };
+
+                    xhr.onload = () => {
+                        if (xhr.status >= 200 && xhr.status < 300) resolve(xhr.response);
+                        else reject("GitHub Error: " + xhr.responseText);
+                    };
+                    xhr.onerror = () => reject("Network Error");
+
+                    const data = JSON.stringify({
+                        message: `Add book: ${title}`,
+                        content: pdfBase64Clean,
+                        branch: config.branch || 'main'
+                    });
+                    xhr.send(data);
+                });
+
+                // 4. Save to Firestore
+                const rawUrl = `https://raw.githubusercontent.com/${config.owner}/${config.repo}/${config.branch || 'main'}/${fileName}`;
+                
+                await db.collection('books').add({
+                    title, author, 
+                    banner: bannerBase64,
+                    pdfUrl: rawUrl,
+                    pages: pdfInfo.pages, // Saving Page Count
+                    createdAt: new Date().toISOString()
+                });
+
+                alert("Book Uploaded Successfully!");
+                location.reload();
+
+            } catch (err) {
+                alert("Error: " + err);
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+                progCont.style.display = 'none';
+            }
         }
 
+        // Settings Modal
+        function showSettings() {
+            const owner = prompt("GitHub Owner:");
+            const repo = prompt("Repo Name:");
+            const token = prompt("Personal Access Token:");
+            if(owner && repo && token) {
+                db.collection('settings').doc('github').set({ owner, repo, token, branch: 'main' });
+            }
+        }
+
+        // List Books
+        function loadBooks() {
+            db.collection('books').orderBy('createdAt', 'desc').onSnapshot(snap => {
+                const list = document.getElementById('book-list');
+                list.innerHTML = '';
+                snap.forEach(doc => {
+                    const b = doc.data();
+                    list.innerHTML += `
+                    <div class="book-item">
+                        <div>
+                            <strong>${b.title}</strong> (${b.pages || '?'} pgs)<br>
+                            <small>${b.author}</small>
+                        </div>
+                        <button onclick="db.collection('books').doc('${doc.id}').delete()" style="width:auto; background:red; color:white;">Delete</button>
+                    </div>`;
+                });
+            });
+        }
     </script>
 </body>
 </html>
