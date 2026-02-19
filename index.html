@@ -10,68 +10,49 @@
     <style>
         :root { --primary: #10b981; --bg: #f8fafc; --text: #334155; }
         
-        /* 1. Remove Blue Highlight & Global Styles */
+        /* 1. Remove Blue Highlight & Selection */
         * { -webkit-tap-highlight-color: transparent; outline: none; user-select: none; }
         body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text); overflow-x: hidden; }
         
-        /* Navbar */
         nav { position: sticky; top: 0; z-index: 50; background: white; padding: 10px 15px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #eee; }
         .search-box { flex: 1; position: relative; }
         .search-box input { width: 100%; padding: 8px 35px; border-radius: 20px; border: 1px solid #ddd; outline: none; }
         .search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; }
 
-        /* Container & Grid */
         .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
         .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 25px; }
 
         /* 5. Skeleton Loader */
         .skeleton { background: #e2e8f0; height: 240px; border-radius: 4px; position: relative; overflow: hidden; }
-        .skeleton::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent); animation: shimmer 1.5s infinite; }
+        .skeleton::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shimmer 1.5s infinite; }
         @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
         /* Card UI */
-        .card { cursor: pointer; position: relative; transition: 0.3s; }
+        .card { cursor: pointer; position: relative; transition: 0.3s; display: none; } /* Hidden until loaded */
         .card img { width: 100%; height: auto; display: block; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .card-info { padding: 8px 0; }
         .card-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; }
         .card-meta { font-size: 0.8rem; color: #64748b; display: flex; justify-content: space-between; }
+        
         .action-btns { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 8px; opacity: 0; transition: 0.3s; }
         .card:hover .action-btns { opacity: 1; }
-        .btn-round { background: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: none; cursor: pointer; }
+        .btn-round { background: white; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: none; cursor: pointer; }
 
-        /* 3 & 4. PDF Reader (Flipping + Scrolling) */
+        /* Reader System */
         #reader-modal { display: none; position: fixed; inset: 0; background: #1a1a1a; z-index: 500; flex-direction: column; }
         .toolbar { background: rgba(30, 30, 30, 0.95); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; color: white; z-index: 600; }
         
-        #pdf-viewport { 
-            flex: 1; 
-            overflow-y: auto; /* 4. Enable Vertical Scroll */
-            display: flex; 
-            flex-direction: column;
-            align-items: center; 
-            position: relative; 
-            perspective: 2000px;
-            padding: 20px 0;
-            scroll-behavior: smooth;
-        }
+        #pdf-viewport { flex: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; position: relative; perspective: 2000px; padding: 20px 0; scroll-behavior: smooth; }
         
-        canvas { 
-            max-width: 95%; 
-            margin-bottom: 20px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5); 
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s; 
-            transform-origin: center left;
-        }
+        canvas { max-width: 95%; margin-bottom: 20px; box-shadow: 0 0 30px rgba(0,0,0,0.5); transition: transform 0.5s ease-in-out, opacity 0.3s; transform-origin: center left; }
         
-        /* 3. Enhanced Flip Animation */
-        .flip-next { transform: rotateY(-20deg) translateX(-50px); opacity: 0; }
-        .flip-prev { transform: rotateY(20deg) translateX(50px); opacity: 0; }
+        /* 3. Improved Flip Animation */
+        .flip-effect { transform: rotateY(-100deg); opacity: 0; }
 
-        #nav-left, #nav-right { position: fixed; top: 60px; height: calc(100% - 60px); width: 25%; z-index: 550; cursor: pointer; }
+        #nav-left, #nav-right { position: fixed; top: 60px; height: calc(100% - 60px); width: 30%; z-index: 550; cursor: pointer; }
         #nav-left { left: 0; }
         #nav-right { right: 0; }
 
-        /* Ad Popup */
         #ad-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; }
         .ad-content { background: white; padding: 25px; border-radius: 15px; text-align: center; width: 85%; max-width: 400px; }
         #timer { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 15px; }
@@ -108,7 +89,7 @@
         <div class="toolbar">
             <i class="fas fa-times" onclick="closeReader()" style="cursor:pointer; font-size: 1.2rem;"></i>
             <span id="pg-info" style="font-weight: 600;">1 / --</span>
-            <!-- 2. Download Button on All Pages -->
+            <!-- 2. Page Download Button -->
             <button class="btn-round" onclick="downloadCurrentPage()" style="background: var(--primary); color: white;">
                 <i class="fas fa-download"></i>
             </button>
@@ -123,6 +104,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script>
+        // PDF Worker Setup
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
         const firebaseConfig = {
             apiKey: "AIzaSyDu8VDVXEbrLbqPmD24OPgNhbH5xjwi_vA",
             authDomain: "we4usnur.firebaseapp.com",
@@ -136,12 +120,9 @@
 
         let currentUrl = '', pdfDoc = null, pNum = 1, isReading = false;
 
-        // 5. Reload Warning
-        window.onbeforeunload = function() {
-            if(isReading) return "Are you sure you want to leave? Your progress is saved.";
-        };
+        // 5. Reload Logic
+        window.onbeforeunload = (e) => { if(isReading) return "Progress saved."; };
 
-        // 5. Load Progress on Startup
         window.onload = () => {
             const savedUrl = localStorage.getItem('last_book');
             const savedPage = localStorage.getItem('last_page');
@@ -151,14 +132,20 @@
             }
         };
 
-        // Fetch Books
-        db.collection('books').orderBy('createdAt', 'desc').onSnapshot(snap => {
-            const grid = document.getElementById('bookList'); grid.innerHTML = '';
-            snap.forEach(doc => {
+        // 5. Fetch Books (Simplified Query for fast loading)
+        db.collection('books').onSnapshot(snap => {
+            const grid = document.getElementById('bookList');
+            if (snap.empty) { grid.innerHTML = "<p>No books found.</p>"; return; }
+            
+            // Sort by createdAt in JS to avoid index errors
+            const sortedDocs = snap.docs.sort((a, b) => b.data().createdAt?.localeCompare(a.data().createdAt));
+            
+            grid.innerHTML = '';
+            sortedDocs.forEach(doc => {
                 const b = doc.data();
                 grid.innerHTML += `
-                <div class="card">
-                    <img src="${b.banner}" onclick="startAd('${b.pdfUrl}')" style="aspect-ratio: auto;">
+                <div class="card" style="display:block">
+                    <img src="${b.banner}" onclick="startAd('${b.pdfUrl}')">
                     <div class="action-btns">
                         <button class="btn-round" onclick="downloadImage('${b.banner}', '${b.title}')"><i class="fas fa-download"></i></button>
                         <button class="btn-round" onclick="alert('${b.description || 'No description'}')"><i class="fas fa-info"></i></button>
@@ -169,26 +156,23 @@
                     </div>
                 </div>`;
             });
+        }, err => {
+            console.error("Firestore Error: ", err);
+            document.getElementById('bookList').innerHTML = "<p>Error loading data.</p>";
         });
 
-        // 2. Download Current PDF Page with Watermark
+        // 2. Download with Watermark
         function downloadCurrentPage() {
             const canvas = document.getElementById('canvas');
-            const tempCanvas = document.createElement('canvas');
-            const tCtx = tempCanvas.getContext('2d');
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = canvas.height;
-            
+            const temp = document.createElement('canvas');
+            const tCtx = temp.getContext('2d');
+            temp.width = canvas.width; temp.height = canvas.height;
             tCtx.drawImage(canvas, 0, 0);
             tCtx.fillStyle = "rgba(16, 185, 129, 0.7)";
-            tCtx.font = `bold ${tempCanvas.width/25}px Inter`;
+            tCtx.font = `bold ${temp.width/20}px Inter`;
             tCtx.textAlign = "right";
-            tCtx.fillText("Nur's Library", tempCanvas.width - 30, tempCanvas.height - 30);
-            
-            const link = document.createElement('a');
-            link.download = `Page_${pNum}_NursLibrary.png`;
-            link.href = tempCanvas.toDataURL();
-            link.click();
+            tCtx.fillText("Nur's Library", temp.width - 30, temp.height - 30);
+            const l = document.createElement('a'); l.download = `Page_${pNum}.png`; l.href = temp.toDataURL(); l.click();
         }
 
         function downloadImage(url, title) {
@@ -198,20 +182,19 @@
                 cvs.width = img.width; cvs.height = img.height; ctx.drawImage(img, 0, 0);
                 ctx.fillStyle = "rgba(16, 185, 129, 0.8)"; ctx.font = `bold ${cvs.width/15}px Inter`;
                 ctx.textAlign = "right"; ctx.fillText("Nur's Library", cvs.width - 20, cvs.height - 40);
-                const l = document.createElement('a'); l.download = `${title}.png`; l.href = cvs.toDataURL(); l.click();
+                const l = document.createElement('a'); l.download = `${title}.png`; l.href = cvs.toB64 = cvs.toDataURL(); l.click();
             };
         }
 
-        function startAd(url, isResume = false) {
+        function startAd(url, resume = false) {
             currentUrl = url;
-            if(isResume) { openReader(); return; }
-            
+            if(resume) { openReader(); return; }
             history.pushState({view: 'ad'}, '');
             document.getElementById('ad-modal').style.display = 'flex';
-            let time = 10;
+            let t = 10;
             const itv = setInterval(() => {
-                time--; document.getElementById('timer').innerText = time;
-                if(time <= 0) { clearInterval(itv); document.getElementById('ad-modal').style.display = 'none'; openReader(); }
+                t--; document.getElementById('timer').innerText = t;
+                if(t <= 0) { clearInterval(itv); document.getElementById('ad-modal').style.display = 'none'; openReader(); }
             }, 1000);
         }
 
@@ -230,8 +213,8 @@
                 const ctx = cvs.getContext('2d'), vp = pg.getViewport({scale: 1.5});
                 cvs.height = vp.height; cvs.width = vp.width;
                 pg.render({canvasContext: ctx, viewport: vp}).promise.then(() => {
-                    cvs.classList.remove('flip-next', 'flip-prev');
-                    document.getElementById('pdf-viewport').scrollTop = 0; // 4. Reset scroll on page change
+                    cvs.classList.remove('flip-effect');
+                    document.getElementById('pdf-viewport').scrollTop = 0;
                 });
                 document.getElementById('pg-info').innerText = n + " / " + pdfDoc.numPages;
                 localStorage.setItem('last_page', n);
@@ -241,14 +224,14 @@
         // 3 & 4. Navigation & Scroll
         document.getElementById('nav-right').onclick = () => {
             if(pNum < pdfDoc.numPages) {
-                document.getElementById('canvas').classList.add('flip-next');
-                setTimeout(() => { pNum++; renderPage(pNum); }, 300;
+                document.getElementById('canvas').classList.add('flip-effect');
+                setTimeout(() => { pNum++; renderPage(pNum); }, 400);
             }
         };
         document.getElementById('nav-left').onclick = () => {
             if(pNum > 1) {
-                document.getElementById('canvas').classList.add('flip-prev');
-                setTimeout(() => { pNum--; renderPage(pNum); }, 300);
+                document.getElementById('canvas').classList.add('flip-effect');
+                setTimeout(() => { pNum--; renderPage(pNum); }, 400);
             }
         };
 
@@ -257,15 +240,14 @@
             localStorage.removeItem('last_book');
             localStorage.removeItem('last_page');
             document.getElementById('reader-modal').style.display = 'none';
-            if(pdfDoc) pdfDoc.destroy();
+            pNum = 1;
         }
 
         window.onpopstate = () => { closeReader(); document.getElementById('ad-modal').style.display = 'none'; };
         document.getElementById('searchInput').oninput = (e) => {
-            const val = e.target.value.toLowerCase();
-            document.querySelectorAll('.card').forEach(c => c.style.display = c.innerText.toLowerCase().includes(val) ? 'block' : 'none');
+            const v = e.target.value.toLowerCase();
+            document.querySelectorAll('.card').forEach(c => c.style.display = c.innerText.toLowerCase().includes(v) ? 'block' : 'none');
         };
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     </script>
 </body>
 </html>
