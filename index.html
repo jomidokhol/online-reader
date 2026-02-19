@@ -2,428 +2,262 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Library | Viewer</title>
-    <!-- Fonts & Icons -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nur's Library</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- PDF.js -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-    
+
     <style>
         :root {
-            --primary: #4f46e5;
-            --bg-light: #f3f4f6;
-            --bg-dark: #111827;
-            --card-light: rgba(255, 255, 255, 0.8);
-            --card-dark: rgba(31, 41, 55, 0.8);
-            --text-light: #1f2937;
-            --text-dark: #f9fafb;
-            --glass: blur(12px);
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --primary: #10b981; /* Emerald Green for Nur's Library */
+            --bg-light: #f8fafc;
+            --bg-dark: #0f172a;
+            --card-light: #ffffff;
+            --card-dark: #1e293b;
+            --text-light: #334155;
+            --text-dark: #f1f5f9;
         }
 
-        /* Base Styles */
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            background-color: var(--bg-light);
-            color: var(--text-light);
-            transition: background 0.3s, color 0.3s;
-        }
-
-        body.dark-mode {
-            background-color: var(--bg-dark);
-            color: var(--text-dark);
-        }
+        body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg-light); color: var(--text-light); transition: 0.3s; }
+        body.dark-mode { background: var(--bg-dark); color: var(--text-dark); }
 
         /* Navbar */
         nav {
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            background: var(--card-light);
-            backdrop-filter: var(--glass);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(10px); padding: 1rem; display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 1px solid rgba(0,0,0,0.1);
         }
+        .dark-mode nav { background: rgba(15, 23, 42, 0.8); border-color: rgba(255,255,255,0.1); }
+        .logo { font-weight: 800; font-size: 1.4rem; color: var(--primary); }
 
-        .dark-mode nav {
-            background: var(--card-dark);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
+        /* Grid */
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+        .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1.5rem; }
 
-        .search-bar {
-            position: relative;
-            width: 300px;
-        }
-
-        .search-bar input {
-            width: 100%;
-            padding: 0.5rem 1rem 0.5rem 2.5rem;
-            border-radius: 20px;
-            border: 1px solid #ccc;
-            background: transparent;
-            color: inherit;
-        }
-
-        .search-bar i {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #888;
-        }
-
-        /* Grid Layout */
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-
-        .book-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 2rem;
-        }
-
-        /* Book Card */
+        /* Card */
         .card {
-            background: var(--card-light);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            cursor: pointer;
+            background: var(--card-light); border-radius: 12px; overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer; transition: 0.3s;
             position: relative;
         }
-
         .dark-mode .card { background: var(--card-dark); }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+        
+        .card img { width: 100%; height: 240px; object-fit: cover; }
+        .card-content { padding: 12px; }
+        .card-title { font-weight: 700; font-size: 1rem; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .card-meta { font-size: 0.8rem; color: #64748b; display: flex; justify-content: space-between; }
+        .page-badge { background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; }
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        /* AD MODAL (Popup) */
+        #ad-modal {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200;
+            flex-direction: column; align-items: center; justify-content: center; text-align: center;
         }
-
-        .card img {
-            width: 100%;
-            height: 300px;
-            object-fit: cover;
+        .ad-content { background: white; padding: 20px; border-radius: 10px; max-width: 90%; width: 350px; }
+        #timer-circle {
+            width: 60px; height: 60px; border-radius: 50%; border: 4px solid var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: bold; margin: 20px auto; color: #333;
         }
+        .ad-msg { margin-bottom: 15px; color: #555; font-size: 0.9rem; }
 
-        .card-content {
-            padding: 1rem;
-        }
-
-        .card-title {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .card-author {
-            font-size: 0.875rem;
-            color: #6b7280;
-        }
-
-        /* Reader Modal */
+        /* PDF READER */
         #reader-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 100;
-            flex-direction: column;
+            display: none; position: fixed; inset: 0; background: #1a1a1a; z-index: 100;
+            flex-direction: column; height: 100vh;
         }
-
-        .reader-toolbar {
-            padding: 1rem;
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            background: #222;
-            color: white;
-            align-items: center;
+        .toolbar {
+            height: 50px; background: #2c2c2c; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; color: white;
         }
-
-        #pdf-render {
-            flex-grow: 1;
-            overflow: auto;
-            display: flex;
-            justify-content: center;
-            background: #333;
-            padding: 20px;
-        }
-
-        canvas {
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            max-width: 100%;
-        }
-
-        /* Utilities */
-        .btn {
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            background: var(--primary);
-            color: white;
-            transition: 0.2s;
-        }
-        .btn:hover { opacity: 0.9; }
-        .btn-icon { background: transparent; font-size: 1.2rem; }
-
-        /* Skeleton Loading */
-        .skeleton {
-            background: linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
-        }
-        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-        /* Toast */
-        #toast {
-            visibility: hidden;
-            min-width: 250px;
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            border-radius: 4px;
-            padding: 16px;
-            position: fixed;
-            z-index: 1000;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
-        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
-        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+        #pdf-container { flex: 1; overflow: auto; display: flex; justify-content: center; background: #525659; padding: 20px; }
+        canvas { box-shadow: 0 0 15px rgba(0,0,0,0.5); max-width: 100%; }
+        
+        /* Utils */
+        .btn-icon { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; padding: 8px; }
     </style>
 </head>
 <body>
 
     <nav>
-        <div class="logo"><strong>Modern</strong>Reader</div>
-        <div class="search-bar">
-            <i class="fas fa-search"></i>
-            <input type="text" id="searchInput" placeholder="Search books...">
-        </div>
-        <button class="btn btn-icon" id="themeToggle"><i class="fas fa-moon"></i></button>
+        <div class="logo"><i class="fas fa-book-reader"></i> Nur's Library</div>
+        <button class="btn-icon" style="color:var(--text-light)" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
     </nav>
 
     <div class="container">
         <div class="book-grid" id="bookList">
-            <!-- Books injected here -->
+            <!-- Books will load here -->
         </div>
     </div>
 
-    <!-- Reader Overlay -->
-    <div id="reader-modal">
-        <div class="reader-toolbar">
-            <button class="btn" onclick="closeReader()"><i class="fas fa-arrow-left"></i> Back</button>
-            <button class="btn" id="prev-page"><i class="fas fa-chevron-left"></i></button>
-            <span id="page-num">Page 1</span>
-            <button class="btn" id="next-page"><i class="fas fa-chevron-right"></i></button>
-            <button class="btn" id="zoom-in"><i class="fas fa-search-plus"></i></button>
-            <button class="btn" id="zoom-out"><i class="fas fa-search-minus"></i></button>
-            <a href="#" id="download-btn" class="btn" target="_blank" download><i class="fas fa-download"></i></a>
+    <!-- AD & TIMER POPUP -->
+    <div id="ad-modal">
+        <div class="ad-content">
+            <h3>Please Wait</h3>
+            <div id="ad-container-box">
+                <!-- Ad Script Injected Here -->
+            </div>
+            <div id="timer-circle">10</div>
+            <p class="ad-msg">Your book is loading...</p>
         </div>
-        <div id="pdf-render">
+    </div>
+
+    <!-- PDF READER -->
+    <div id="reader-modal">
+        <div class="toolbar">
+            <button class="btn-icon" onclick="goBack()"><i class="fas fa-arrow-left"></i></button>
+            <span id="page-num">1 / --</span>
+            <button class="btn-icon" id="nextBtn"><i class="fas fa-arrow-right"></i></button>
+        </div>
+        <div id="pdf-container">
             <canvas id="the-canvas"></canvas>
         </div>
     </div>
 
-    <div id="toast">Notification</div>
-
-    <!-- Firebase SDKs -->
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 
     <script>
-        // --- 1. CONFIGURATION ---
+        // CONFIG
         const firebaseConfig = {
-  apiKey: "AIzaSyDu8VDVXEbrLbqPmD24OPgNhbH5xjwi_vA",
-  authDomain: "we4usnur.firebaseapp.com",
-  projectId: "we4usnur",
-  storageBucket: "we4usnur.firebasestorage.app",
-  messagingSenderId: "1069907132834",
-  appId: "1:1069907132834:web:f6aec92fc61c413767f2fb",
-  measurementId: "G-LZCCHNFRSN"
+            apiKey: "AIzaSyDu8VDVXEbrLbqPmD24OPgNhbH5xjwi_vA",
+            authDomain: "we4usnur.firebaseapp.com",
+            projectId: "we4usnur",
+            storageBucket: "we4usnur.firebasestorage.app",
+            messagingSenderId: "1069907132834",
+            appId: "1:1069907132834:web:f6aec92fc61c413767f2fb"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // --- 2. STATE MANAGEMENT ---
-        let pdfDoc = null;
-        let pageNum = 1;
-        let pageRendering = false;
-        let pageNumPending = null;
-        let scale = 1.2;
-        let canvas = document.getElementById('the-canvas');
-        let ctx = canvas.getContext('2d');
-        let currentBookId = null;
+        // STATE
+        let pdfDoc = null, pageNum = 1, pageRendering = false, scale = 1.2;
+        const canvas = document.getElementById('the-canvas');
+        const ctx = canvas.getContext('2d');
+        let currentPdfUrl = '';
 
-        // --- 3. UI LOGIC ---
-        
-        // Theme Toggle
-        const themeBtn = document.getElementById('themeToggle');
-        themeBtn.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            themeBtn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-        });
-
-        // Load Books
-        async function loadBooks() {
+        // LOAD BOOKS
+        db.collection('books').orderBy('createdAt', 'desc').onSnapshot(snap => {
             const list = document.getElementById('bookList');
-            list.innerHTML = Array(4).fill('<div class="card skeleton" style="height:300px"></div>').join(''); // Skeleton
-
-            try {
-                const snapshot = await db.collection('books').orderBy('createdAt', 'desc').get();
-                list.innerHTML = '';
-                
-                snapshot.forEach(doc => {
-                    const book = doc.data();
-                    const el = document.createElement('div');
-                    el.className = 'card';
-                    el.innerHTML = `
-                        <img src="${book.bannerURL || 'https://via.placeholder.com/300x400?text=No+Cover'}" alt="${book.title}">
+            list.innerHTML = '';
+            snap.forEach(doc => {
+                const b = doc.data();
+                // কার্ডে পেজ সংখ্যা দেখানো হচ্ছে
+                list.innerHTML += `
+                    <div class="card" onclick="initBook('${b.pdfUrl}')">
+                        <img src="${b.banner}" loading="lazy">
                         <div class="card-content">
-                            <div class="card-title">${book.title}</div>
-                            <div class="card-author">${book.author}</div>
+                            <div class="card-title">${b.title}</div>
+                            <div class="card-meta">
+                                <span>${b.author}</span>
+                                <span class="page-badge">${b.pages || '?'} Pages</span>
+                            </div>
                         </div>
-                    `;
-                    el.onclick = () => openReader(doc.id, book.pdfURL);
-                    list.appendChild(el);
-                });
-            } catch (error) {
-                console.error("Error loading books:", error);
-                showToast("Failed to load library");
-            }
-        }
-
-        // Search
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            const cards = document.querySelectorAll('.card');
-            cards.forEach(card => {
-                const title = card.querySelector('.card-title').innerText.toLowerCase();
-                card.style.display = title.includes(term) ? 'block' : 'none';
+                    </div>`;
             });
         });
 
-        // --- 4. PDF READER LOGIC ---
-
-        // Configure PDF.js Worker
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-
-        async function openReader(id, url) {
-            currentBookId = id;
-            document.getElementById('reader-modal').style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-            document.getElementById('download-btn').href = url;
-
-            // Load saved progress
-            const savedPage = localStorage.getItem(`progress_${id}`);
-            pageNum = savedPage ? parseInt(savedPage) : 1;
-
-            showToast("Loading PDF...");
+        // 1. CLICK HANDLER (AD LOGIC)
+        function initBook(url) {
+            currentPdfUrl = url;
             
-            try {
-                const loadingTask = pdfjsLib.getDocument(url);
-                pdfDoc = await loadingTask.promise;
-                document.getElementById('page-num').textContent = `Page ${pageNum} of ${pdfDoc.numPages}`;
-                renderPage(pageNum);
-            } catch (err) {
-                showToast("Error loading PDF");
-                console.error(err);
-            }
+            // Push state for Back Button logic
+            history.pushState({modal: 'ad'}, "Ad", "#ad");
+            
+            const adModal = document.getElementById('ad-modal');
+            const timerDisplay = document.getElementById('timer-circle');
+            const adBox = document.getElementById('ad-container-box');
+            
+            adModal.style.display = 'flex';
+            let timeLeft = 10;
+            timerDisplay.innerText = timeLeft;
+
+            // Inject Ad Script
+            adBox.innerHTML = ''; 
+            const script = document.createElement('script');
+            script.async = true;
+            script.setAttribute('data-cfasync', 'false');
+            script.src = "https://pl28743379.effectivegatecpm.com/e8a4101484bcc312e8a1ce9f0d1eadac/invoke.js";
+            adBox.appendChild(script);
+            
+            const containerDiv = document.createElement('div');
+            containerDiv.id = "container-e8a4101484bcc312e8a1ce9f0d1eadac";
+            adBox.appendChild(containerDiv);
+
+            // Timer Loop
+            const interval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = timeLeft;
+                if(timeLeft <= 0) {
+                    clearInterval(interval);
+                    adModal.style.display = 'none';
+                    // Open Reader replacing the Ad state
+                    history.replaceState({modal: 'reader'}, "Reader", "#reading");
+                    openReader();
+                }
+            }, 1000);
+
+            // If user goes back during ad, clear interval
+            window.onpopstate = () => {
+                clearInterval(interval);
+                adModal.style.display = 'none';
+                document.getElementById('reader-modal').style.display = 'none';
+                document.body.style.overflow = 'auto';
+            };
         }
 
-        function closeReader() {
-            document.getElementById('reader-modal').style.display = 'none';
-            document.body.style.overflow = 'auto';
-            if(pdfDoc) {
-                pdfDoc.destroy();
-                pdfDoc = null;
+        // 2. READER LOGIC
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+        async function openReader() {
+            document.getElementById('reader-modal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            
+            try {
+                const loadingTask = pdfjsLib.getDocument(currentPdfUrl);
+                pdfDoc = await loadingTask.promise;
+                pageNum = 1;
+                renderPage(pageNum);
+            } catch(e) {
+                alert("Error loading PDF");
+                goBack();
             }
         }
 
         function renderPage(num) {
             pageRendering = true;
-            
-            // Save Progress
-            localStorage.setItem(`progress_${currentBookId}`, num);
-
-            pdfDoc.getPage(num).then(function(page) {
-                var viewport = page.getViewport({scale: scale});
+            pdfDoc.getPage(num).then(page => {
+                const viewport = page.getViewport({scale: scale});
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
-
-                var renderContext = {
-                    canvasContext: ctx,
-                    viewport: viewport
-                };
-                var renderTask = page.render(renderContext);
-
-                renderTask.promise.then(function() {
-                    pageRendering = false;
-                    if (pageNumPending !== null) {
-                        renderPage(pageNumPending);
-                        pageNumPending = null;
-                    }
-                });
+                const renderCtx = { canvasContext: ctx, viewport: viewport };
+                page.render(renderCtx).promise.then(() => pageRendering = false);
             });
-
-            document.getElementById('page-num').textContent = `Page ${num} of ${pdfDoc.numPages}`;
+            document.getElementById('page-num').innerText = `${num} / ${pdfDoc.numPages}`;
         }
 
-        function queueRenderPage(num) {
-            if (pageRendering) {
-                pageNumPending = num;
-            } else {
-                renderPage(num);
-            }
+        // 3. NAVIGATION (BACK BUTTON)
+        function goBack() {
+            // Manually triggering back will fire onpopstate
+            history.back();
         }
+        
+        // Listen for Browser Back Button
+        window.addEventListener('popstate', (event) => {
+            document.getElementById('ad-modal').style.display = 'none';
+            document.getElementById('reader-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            if(pdfDoc) { pdfDoc.destroy(); pdfDoc = null; }
+        });
 
-        function onPrevPage() {
-            if (pageNum <= 1) return;
-            pageNum--;
-            queueRenderPage(pageNum);
-        }
+        // Reader Controls
+        document.getElementById('nextBtn').onclick = () => { if(pageNum < pdfDoc.numPages) renderPage(++pageNum); };
+        canvas.onclick = () => { if(pageNum < pdfDoc.numPages) renderPage(++pageNum); };
 
-        function onNextPage() {
-            if (pageNum >= pdfDoc.numPages) return;
-            pageNum++;
-            queueRenderPage(pageNum);
-        }
-
-        document.getElementById('prev-page').addEventListener('click', onPrevPage);
-        document.getElementById('next-page').addEventListener('click', onNextPage);
-        document.getElementById('zoom-in').addEventListener('click', () => { scale += 0.2; renderPage(pageNum); });
-        document.getElementById('zoom-out').addEventListener('click', () => { if(scale > 0.6) scale -= 0.2; renderPage(pageNum); });
-
-        // Helper
-        function showToast(msg) {
-            const x = document.getElementById("toast");
-            x.innerText = msg;
-            x.className = "show";
-            setTimeout(() => { x.className = x.className.replace("show", ""); }, 3000);
-        }
-
-        // Init
-        loadBooks();
-
+        // Theme
+        function toggleTheme() { document.body.classList.toggle('dark-mode'); }
     </script>
 </body>
 </html>
