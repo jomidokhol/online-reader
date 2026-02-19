@@ -10,7 +10,7 @@
 
     <style>
         :root {
-            --primary: #10b981; /* Emerald Green for Nur's Library */
+            --primary: #10b981; 
             --bg-light: #f8fafc;
             --bg-dark: #0f172a;
             --card-light: #ffffff;
@@ -22,14 +22,41 @@
         body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg-light); color: var(--text-light); transition: 0.3s; }
         body.dark-mode { background: var(--bg-dark); color: var(--text-dark); }
 
-        /* Navbar */
+        /* Navbar with Search Bar */
         nav {
             position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,0.8);
-            backdrop-filter: blur(10px); padding: 1rem; display: flex; justify-content: space-between;
+            backdrop-filter: blur(10px); padding: 0.7rem 1rem; display: flex; justify-content: space-between;
             align-items: center; border-bottom: 1px solid rgba(0,0,0,0.1);
         }
         .dark-mode nav { background: rgba(15, 23, 42, 0.8); border-color: rgba(255,255,255,0.1); }
-        .logo { font-weight: 800; font-size: 1.4rem; color: var(--primary); }
+        .logo { font-weight: 800; font-size: 1.2rem; color: var(--primary); white-space: nowrap; }
+
+        /* Search Box Style */
+        .search-container {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
+            margin: 0 15px;
+        }
+        .search-container input {
+            width: 100%;
+            padding: 8px 15px 8px 35px;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+            background: var(--bg-light);
+            color: inherit;
+            outline: none;
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+        .dark-mode .search-container input { background: #1e293b; border-color: #334155; }
+        .search-container i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
 
         /* Grid */
         .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
@@ -50,7 +77,7 @@
         .card-meta { font-size: 0.8rem; color: #64748b; display: flex; justify-content: space-between; }
         .page-badge { background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; }
 
-        /* AD MODAL (Popup) */
+        /* AD MODAL */
         #ad-modal {
             display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200;
             flex-direction: column; align-items: center; justify-content: center; text-align: center;
@@ -61,7 +88,6 @@
             display: flex; align-items: center; justify-content: center;
             font-size: 1.5rem; font-weight: bold; margin: 20px auto; color: #333;
         }
-        .ad-msg { margin-bottom: 15px; color: #555; font-size: 0.9rem; }
 
         /* PDF READER */
         #reader-modal {
@@ -74,14 +100,25 @@
         #pdf-container { flex: 1; overflow: auto; display: flex; justify-content: center; background: #525659; padding: 20px; }
         canvas { box-shadow: 0 0 15px rgba(0,0,0,0.5); max-width: 100%; }
         
-        /* Utils */
         .btn-icon { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; padding: 8px; }
+
+        @media (max-width: 480px) {
+            .logo { font-size: 1rem; }
+            .search-container { margin: 0 10px; }
+        }
     </style>
 </head>
 <body>
 
     <nav>
         <div class="logo"><i class="fas fa-book-reader"></i> Nur's Library</div>
+        
+        <!-- SEARCH BAR ADDED HERE -->
+        <div class="search-container">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search book or author...">
+        </div>
+
         <button class="btn-icon" style="color:var(--text-light)" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
     </nav>
 
@@ -95,11 +132,9 @@
     <div id="ad-modal">
         <div class="ad-content">
             <h3>Please Wait</h3>
-            <div id="ad-container-box">
-                <!-- Ad Script Injected Here -->
-            </div>
+            <div id="ad-container-box"></div>
             <div id="timer-circle">10</div>
-            <p class="ad-msg">Your book is loading...</p>
+            <p style="color:#555">Your book is loading...</p>
         </div>
     </div>
 
@@ -120,7 +155,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 
     <script>
-        // CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyDu8VDVXEbrLbqPmD24OPgNhbH5xjwi_vA",
             authDomain: "we4usnur.firebaseapp.com",
@@ -132,11 +166,27 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // STATE
         let pdfDoc = null, pageNum = 1, pageRendering = false, scale = 1.2;
         const canvas = document.getElementById('the-canvas');
         const ctx = canvas.getContext('2d');
         let currentPdfUrl = '';
+
+        // SEARCH FILTER LOGIC
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.card');
+            
+            cards.forEach(card => {
+                const title = card.querySelector('.card-title').innerText.toLowerCase();
+                const author = card.querySelector('.card-meta span').innerText.toLowerCase();
+                
+                if(title.includes(term) || author.includes(term)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
 
         // LOAD BOOKS
         db.collection('books').orderBy('createdAt', 'desc').onSnapshot(snap => {
@@ -144,7 +194,6 @@
             list.innerHTML = '';
             snap.forEach(doc => {
                 const b = doc.data();
-                // কার্ডে পেজ সংখ্যা দেখানো হচ্ছে
                 list.innerHTML += `
                     <div class="card" onclick="initBook('${b.pdfUrl}')">
                         <img src="${b.banner}" loading="lazy">
@@ -159,13 +208,10 @@
             });
         });
 
-        // 1. CLICK HANDLER (AD LOGIC)
+        // AD & TIMER LOGIC
         function initBook(url) {
             currentPdfUrl = url;
-            
-            // Push state for Back Button logic
             history.pushState({modal: 'ad'}, "Ad", "#ad");
-            
             const adModal = document.getElementById('ad-modal');
             const timerDisplay = document.getElementById('timer-circle');
             const adBox = document.getElementById('ad-container-box');
@@ -174,7 +220,6 @@
             let timeLeft = 10;
             timerDisplay.innerText = timeLeft;
 
-            // Inject Ad Script
             adBox.innerHTML = ''; 
             const script = document.createElement('script');
             script.async = true;
@@ -186,20 +231,17 @@
             containerDiv.id = "container-e8a4101484bcc312e8a1ce9f0d1eadac";
             adBox.appendChild(containerDiv);
 
-            // Timer Loop
             const interval = setInterval(() => {
                 timeLeft--;
                 timerDisplay.innerText = timeLeft;
                 if(timeLeft <= 0) {
                     clearInterval(interval);
                     adModal.style.display = 'none';
-                    // Open Reader replacing the Ad state
                     history.replaceState({modal: 'reader'}, "Reader", "#reading");
                     openReader();
                 }
             }, 1000);
 
-            // If user goes back during ad, clear interval
             window.onpopstate = () => {
                 clearInterval(interval);
                 adModal.style.display = 'none';
@@ -208,13 +250,12 @@
             };
         }
 
-        // 2. READER LOGIC
+        // READER LOGIC
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
         async function openReader() {
             document.getElementById('reader-modal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
-            
             try {
                 const loadingTask = pdfjsLib.getDocument(currentPdfUrl);
                 pdfDoc = await loadingTask.promise;
@@ -238,13 +279,8 @@
             document.getElementById('page-num').innerText = `${num} / ${pdfDoc.numPages}`;
         }
 
-        // 3. NAVIGATION (BACK BUTTON)
-        function goBack() {
-            // Manually triggering back will fire onpopstate
-            history.back();
-        }
+        function goBack() { history.back(); }
         
-        // Listen for Browser Back Button
         window.addEventListener('popstate', (event) => {
             document.getElementById('ad-modal').style.display = 'none';
             document.getElementById('reader-modal').style.display = 'none';
@@ -252,11 +288,9 @@
             if(pdfDoc) { pdfDoc.destroy(); pdfDoc = null; }
         });
 
-        // Reader Controls
         document.getElementById('nextBtn').onclick = () => { if(pageNum < pdfDoc.numPages) renderPage(++pageNum); };
         canvas.onclick = () => { if(pageNum < pdfDoc.numPages) renderPage(++pageNum); };
 
-        // Theme
         function toggleTheme() { document.body.classList.toggle('dark-mode'); }
     </script>
 </body>
