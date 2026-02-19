@@ -4,156 +4,66 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nur's Library</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-
     <style>
-        :root {
-            --primary: #10b981; 
-            --bg-light: #f8fafc;
-            --bg-dark: #0f172a;
-            --card-light: #ffffff;
-            --card-dark: #1e293b;
-            --text-light: #334155;
-            --text-dark: #f1f5f9;
-        }
-
-        body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg-light); color: var(--text-light); transition: 0.3s; }
-        body.dark-mode { background: var(--bg-dark); color: var(--text-dark); }
-
-        /* Navbar with Search Bar */
-        nav {
-            position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,0.8);
-            backdrop-filter: blur(10px); padding: 0.7rem 1rem; display: flex; justify-content: space-between;
-            align-items: center; border-bottom: 1px solid rgba(0,0,0,0.1);
-        }
-        .dark-mode nav { background: rgba(15, 23, 42, 0.8); border-color: rgba(255,255,255,0.1); }
-        .logo { font-weight: 800; font-size: 1.2rem; color: var(--primary); white-space: nowrap; }
-
-        /* Search Box Style */
-        .search-container {
-            position: relative;
-            flex: 1;
-            max-width: 400px;
-            margin: 0 15px;
-        }
-        .search-container input {
-            width: 100%;
-            padding: 8px 15px 8px 35px;
-            border-radius: 20px;
-            border: 1px solid #ddd;
-            background: var(--bg-light);
-            color: inherit;
-            outline: none;
-            font-size: 0.9rem;
-            transition: 0.3s;
-        }
-        .dark-mode .search-container input { background: #1e293b; border-color: #334155; }
-        .search-container i {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #94a3b8;
-        }
-
-        /* Grid */
+        :root { --primary: #10b981; --bg: #f8fafc; --text: #334155; --card: #ffffff; }
+        body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text); }
+        nav { position: sticky; top: 0; z-index: 50; background: white; padding: 10px 15px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #eee; }
+        .search-box { flex: 1; position: relative; }
+        .search-box input { width: 100%; padding: 8px 35px; border-radius: 20px; border: 1px solid #ddd; outline: none; }
+        .search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; }
         .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
-        .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1.5rem; }
-
-        /* Card */
-        .card {
-            background: var(--card-light); border-radius: 12px; overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer; transition: 0.3s;
-            position: relative;
-        }
-        .dark-mode .card { background: var(--card-dark); }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
-        
-        .card img { width: 100%; height: 240px; object-fit: cover; }
-        .card-content { padding: 12px; }
-        .card-title { font-weight: 700; font-size: 1rem; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .card-meta { font-size: 0.8rem; color: #64748b; display: flex; justify-content: space-between; }
-        .page-badge { background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; }
-
-        /* AD MODAL */
-        #ad-modal {
-            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200;
-            flex-direction: column; align-items: center; justify-content: center; text-align: center;
-        }
-        .ad-content { background: white; padding: 20px; border-radius: 10px; max-width: 90%; width: 350px; }
-        #timer-circle {
-            width: 60px; height: 60px; border-radius: 50%; border: 4px solid var(--primary);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem; font-weight: bold; margin: 20px auto; color: #333;
-        }
-
-        /* PDF READER */
-        #reader-modal {
-            display: none; position: fixed; inset: 0; background: #1a1a1a; z-index: 100;
-            flex-direction: column; height: 100vh;
-        }
-        .toolbar {
-            height: 50px; background: #2c2c2c; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; color: white;
-        }
-        #pdf-container { flex: 1; overflow: auto; display: flex; justify-content: center; background: #525659; padding: 20px; }
-        canvas { box-shadow: 0 0 15px rgba(0,0,0,0.5); max-width: 100%; }
-        
-        .btn-icon { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; padding: 8px; }
-
-        @media (max-width: 480px) {
-            .logo { font-size: 1rem; }
-            .search-container { margin: 0 10px; }
-        }
+        .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
+        .card { background: var(--card); border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; transition: 0.3s; }
+        .card img { width: 100%; height: 200px; object-fit: cover; }
+        .card-info { padding: 10px; font-size: 0.85rem; }
+        .card-title { font-weight: 700; height: 35px; overflow: hidden; }
+        #ad-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; }
+        .ad-content { background: white; padding: 25px; border-radius: 15px; text-align: center; width: 85%; max-width: 400px; }
+        #timer { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 15px; }
+        #reader-modal { display: none; position: fixed; inset: 0; background: #1a1a1a; z-index: 500; flex-direction: column; }
+        .toolbar { background: #2c2c2c; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; color: white; }
+        #pdf-container { flex: 1; overflow: auto; display: flex; justify-content: center; padding: 10px; }
+        canvas { max-width: 100%; box-shadow: 0 0 15px black; }
     </style>
 </head>
 <body>
-
     <nav>
-        <div class="logo"><i class="fas fa-book-reader"></i> Nur's Library</div>
-        
-        <!-- SEARCH BAR ADDED HERE -->
-        <div class="search-container">
+        <div style="font-weight:800; color:var(--primary); font-size:1.2rem;">Nur's</div>
+        <div class="search-box">
             <i class="fas fa-search"></i>
-            <input type="text" id="searchInput" placeholder="Search book or author...">
+            <input type="text" id="searchInput" placeholder="Search book...">
         </div>
-
-        <button class="btn-icon" style="color:var(--text-light)" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
     </nav>
-
     <div class="container">
-        <div class="book-grid" id="bookList">
-            <!-- Books will load here -->
-        </div>
+        <div id="loading" style="text-align:center; padding: 50px;">Fetching Library...</div>
+        <div class="book-grid" id="bookList"></div>
     </div>
 
-    <!-- AD & TIMER POPUP -->
+    <!-- AD POPUP -->
     <div id="ad-modal">
         <div class="ad-content">
             <h3>Please Wait</h3>
-            <div id="ad-container-box"></div>
-            <div id="timer-circle">10</div>
-            <p style="color:#555">Your book is loading...</p>
+            <div id="ad-box"></div>
+            <div id="timer">10</div>
+            <p>Your book is almost ready.</p>
         </div>
     </div>
 
     <!-- PDF READER -->
     <div id="reader-modal">
         <div class="toolbar">
-            <button class="btn-icon" onclick="goBack()"><i class="fas fa-arrow-left"></i></button>
-            <span id="page-num">1 / --</span>
-            <button class="btn-icon" id="nextBtn"><i class="fas fa-arrow-right"></i></button>
+            <i class="fas fa-arrow-left" onclick="history.back()" style="cursor:pointer"></i>
+            <span id="pg-info">1 / --</span>
+            <i class="fas fa-arrow-right" id="next" style="cursor:pointer"></i>
         </div>
-        <div id="pdf-container">
-            <canvas id="the-canvas"></canvas>
-        </div>
+        <div id="pdf-container"><canvas id="canvas"></canvas></div>
     </div>
 
-    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyDu8VDVXEbrLbqPmD24OPgNhbH5xjwi_vA",
@@ -166,132 +76,71 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let pdfDoc = null, pageNum = 1, pageRendering = false, scale = 1.2;
-        const canvas = document.getElementById('the-canvas');
-        const ctx = canvas.getContext('2d');
-        let currentPdfUrl = '';
-
-        // SEARCH FILTER LOGIC
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            const cards = document.querySelectorAll('.card');
-            
-            cards.forEach(card => {
-                const title = card.querySelector('.card-title').innerText.toLowerCase();
-                const author = card.querySelector('.card-meta span').innerText.toLowerCase();
-                
-                if(title.includes(term) || author.includes(term)) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        });
-
-        // LOAD BOOKS
+        // ডাটাবেস থেকে রিড করা হচ্ছে
         db.collection('books').orderBy('createdAt', 'desc').onSnapshot(snap => {
-            const list = document.getElementById('bookList');
-            list.innerHTML = '';
+            document.getElementById('loading').style.display = 'none';
+            const grid = document.getElementById('bookList'); grid.innerHTML = '';
             snap.forEach(doc => {
                 const b = doc.data();
-                list.innerHTML += `
-                    <div class="card" onclick="initBook('${b.pdfUrl}')">
-                        <img src="${b.banner}" loading="lazy">
-                        <div class="card-content">
-                            <div class="card-title">${b.title}</div>
-                            <div class="card-meta">
-                                <span>${b.author}</span>
-                                <span class="page-badge">${b.pages || '?'} Pages</span>
-                            </div>
-                        </div>
-                    </div>`;
+                grid.innerHTML += `<div class="card" onclick="startAd('${b.pdfUrl}')">
+                    <img src="${b.banner}">
+                    <div class="card-info">
+                        <div class="card-title">${b.title}</div>
+                        <small>${b.author} | ${b.pages} Pgs</small>
+                    </div>
+                </div>`;
             });
         });
 
-        // AD & TIMER LOGIC
-        function initBook(url) {
-            currentPdfUrl = url;
-            history.pushState({modal: 'ad'}, "Ad", "#ad");
-            const adModal = document.getElementById('ad-modal');
-            const timerDisplay = document.getElementById('timer-circle');
-            const adBox = document.getElementById('ad-container-box');
-            
-            adModal.style.display = 'flex';
-            let timeLeft = 10;
-            timerDisplay.innerText = timeLeft;
+        document.getElementById('searchInput').oninput = (e) => {
+            const val = e.target.value.toLowerCase();
+            document.querySelectorAll('.card').forEach(c => {
+                c.style.display = c.innerText.toLowerCase().includes(val) ? 'block' : 'none';
+            });
+        };
 
-            adBox.innerHTML = ''; 
-            const script = document.createElement('script');
-            script.async = true;
-            script.setAttribute('data-cfasync', 'false');
-            script.src = "https://pl28743379.effectivegatecpm.com/e8a4101484bcc312e8a1ce9f0d1eadac/invoke.js";
-            adBox.appendChild(script);
+        let currentUrl = '', pdfDoc = null, pNum = 1;
+        function startAd(url) {
+            currentUrl = url; history.pushState({view: 'ad'}, '');
+            document.getElementById('ad-modal').style.display = 'flex';
             
-            const containerDiv = document.createElement('div');
-            containerDiv.id = "container-e8a4101484bcc312e8a1ce9f0d1eadac";
-            adBox.appendChild(containerDiv);
-
-            const interval = setInterval(() => {
-                timeLeft--;
-                timerDisplay.innerText = timeLeft;
-                if(timeLeft <= 0) {
-                    clearInterval(interval);
-                    adModal.style.display = 'none';
-                    history.replaceState({modal: 'reader'}, "Reader", "#reading");
-                    openReader();
-                }
+            // Ad Script Injection
+            const adBox = document.getElementById('ad-box'); adBox.innerHTML = '';
+            const sc = document.createElement('script'); sc.src = "https://pl28743379.effectivegatecpm.com/e8a4101484bcc312e8a1ce9f0d1eadac/invoke.js";
+            sc.async = true; adBox.appendChild(sc);
+            const div = document.createElement('div'); div.id = "container-e8a4101484bcc312e8a1ce9f0d1eadac"; adBox.appendChild(div);
+            
+            let time = 10;
+            const itv = setInterval(() => {
+                time--; document.getElementById('timer').innerText = time;
+                if(time <= 0) { clearInterval(itv); document.getElementById('ad-modal').style.display = 'none'; openReader(); }
             }, 1000);
 
             window.onpopstate = () => {
-                clearInterval(interval);
-                adModal.style.display = 'none';
+                clearInterval(itv);
+                document.getElementById('ad-modal').style.display = 'none';
                 document.getElementById('reader-modal').style.display = 'none';
-                document.body.style.overflow = 'auto';
             };
         }
 
-        // READER LOGIC
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-
         async function openReader() {
+            history.replaceState({view: 'reader'}, '');
             document.getElementById('reader-modal').style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-            try {
-                const loadingTask = pdfjsLib.getDocument(currentPdfUrl);
-                pdfDoc = await loadingTask.promise;
-                pageNum = 1;
-                renderPage(pageNum);
-            } catch(e) {
-                alert("Error loading PDF");
-                goBack();
-            }
+            const loading = pdfjsLib.getDocument(currentUrl);
+            pdfDoc = await loading.promise; pNum = 1; renderPage(1);
         }
 
-        function renderPage(num) {
-            pageRendering = true;
-            pdfDoc.getPage(num).then(page => {
-                const viewport = page.getViewport({scale: scale});
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-                const renderCtx = { canvasContext: ctx, viewport: viewport };
-                page.render(renderCtx).promise.then(() => pageRendering = false);
+        function renderPage(n) {
+            pdfDoc.getPage(n).then(pg => {
+                const cvs = document.getElementById('canvas'), ctx = cvs.getContext('2d'), vp = pg.getViewport({scale: 1.5});
+                cvs.height = vp.height; cvs.width = vp.width;
+                pg.render({canvasContext: ctx, viewport: vp});
+                document.getElementById('pg-info').innerText = n + " / " + pdfDoc.numPages;
             });
-            document.getElementById('page-num').innerText = `${num} / ${pdfDoc.numPages}`;
         }
 
-        function goBack() { history.back(); }
-        
-        window.addEventListener('popstate', (event) => {
-            document.getElementById('ad-modal').style.display = 'none';
-            document.getElementById('reader-modal').style.display = 'none';
-            document.body.style.overflow = 'auto';
-            if(pdfDoc) { pdfDoc.destroy(); pdfDoc = null; }
-        });
-
-        document.getElementById('nextBtn').onclick = () => { if(pageNum < pdfDoc.numPages) renderPage(++pageNum); };
-        canvas.onclick = () => { if(pageNum < pdfDoc.numPages) renderPage(++pageNum); };
-
-        function toggleTheme() { document.body.classList.toggle('dark-mode'); }
+        document.getElementById('next').onclick = () => { if(pNum < pdfDoc.numPages) renderPage(++pNum); };
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     </script>
 </body>
 </html>
