@@ -9,6 +9,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
         :root { --primary: #10b981; --bg: #f8fafc; --text: #334155; }
+        
+        /* 1. Remove Blue Highlight & Global Styles */
+        * { -webkit-tap-highlight-color: transparent; outline: none; user-select: none; }
         body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text); overflow-x: hidden; }
         
         /* Navbar */
@@ -19,33 +22,52 @@
 
         /* Container & Grid */
         .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
-        .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 25px; align-items: start; }
+        .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 25px; }
 
-        /* 3. Card UI (Real Ratio & Flat Design) */
-        .card { cursor: pointer; position: relative; transition: 0.3s; background: none; box-shadow: none; border: none; }
-        .card img { width: 100%; height: auto; display: block; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.3s; }
-        .card:hover img { transform: scale(1.02); }
-        .card-info { padding: 8px 0; text-align: left; }
-        .card-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; color: #1e293b; }
-        .card-meta { font-size: 0.8rem; color: #64748b; display: flex; align-items: center; justify-content: space-between; }
-        
-        /* 2. Download Button & Info Icon */
+        /* 5. Skeleton Loader */
+        .skeleton { background: #e2e8f0; height: 240px; border-radius: 4px; position: relative; overflow: hidden; }
+        .skeleton::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent); animation: shimmer 1.5s infinite; }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+        /* Card UI */
+        .card { cursor: pointer; position: relative; transition: 0.3s; }
+        .card img { width: 100%; height: auto; display: block; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .card-info { padding: 8px 0; }
+        .card-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; }
+        .card-meta { font-size: 0.8rem; color: #64748b; display: flex; justify-content: space-between; }
         .action-btns { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 8px; opacity: 0; transition: 0.3s; }
         .card:hover .action-btns { opacity: 1; }
-        .btn-round { background: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: none; cursor: pointer; color: var(--text); font-size: 0.8rem; }
-        .btn-round:hover { background: var(--primary); color: white; }
+        .btn-round { background: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: none; cursor: pointer; }
 
-        /* 1. PDF Reader with Flip Animation & Click Nav */
+        /* 3 & 4. PDF Reader (Flipping + Scrolling) */
         #reader-modal { display: none; position: fixed; inset: 0; background: #1a1a1a; z-index: 500; flex-direction: column; }
-        .toolbar { background: rgba(44, 44, 44, 0.9); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; color: white; z-index: 10; }
-        #pdf-viewport { flex: 1; overflow: hidden; display: flex; justify-content: center; align-items: center; position: relative; perspective: 1500px; }
+        .toolbar { background: rgba(30, 30, 30, 0.95); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; color: white; z-index: 600; }
         
-        /* Flip Animation */
-        canvas { max-height: 90vh; max-width: 95%; box-shadow: 0 0 20px black; transition: transform 0.6s cubic-bezier(0.645, 0.045, 0.355, 1); transform-origin: left center; }
-        .page-flipping { transform: rotateY(-180deg); opacity: 0; }
+        #pdf-viewport { 
+            flex: 1; 
+            overflow-y: auto; /* 4. Enable Vertical Scroll */
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            position: relative; 
+            perspective: 2000px;
+            padding: 20px 0;
+            scroll-behavior: smooth;
+        }
+        
+        canvas { 
+            max-width: 95%; 
+            margin-bottom: 20px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5); 
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s; 
+            transform-origin: center left;
+        }
+        
+        /* 3. Enhanced Flip Animation */
+        .flip-next { transform: rotateY(-20deg) translateX(-50px); opacity: 0; }
+        .flip-prev { transform: rotateY(20deg) translateX(50px); opacity: 0; }
 
-        /* Click Navigation Areas */
-        #nav-left, #nav-right { position: absolute; top: 0; height: 100%; width: 50%; z-index: 5; cursor: pointer; }
+        #nav-left, #nav-right { position: fixed; top: 60px; height: calc(100% - 60px); width: 25%; z-index: 550; cursor: pointer; }
         #nav-left { left: 0; }
         #nav-right { right: 0; }
 
@@ -53,7 +75,6 @@
         #ad-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; }
         .ad-content { background: white; padding: 25px; border-radius: 15px; text-align: center; width: 85%; max-width: 400px; }
         #timer { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 15px; }
-
     </style>
 </head>
 <body>
@@ -64,27 +85,33 @@
             <input type="text" id="searchInput" placeholder="Search book...">
         </div>
     </nav>
+
     <div class="container">
-        <div id="loading" style="text-align:center; padding: 50px;">Fetching Library...</div>
-        <div class="book-grid" id="bookList"></div>
+        <div class="book-grid" id="bookList">
+            <!-- 5. Initial Skeleton Loaders -->
+            <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+        </div>
     </div>
 
     <!-- AD POPUP -->
     <div id="ad-modal">
         <div class="ad-content">
-            <h3>Please Wait</h3>
+            <h3>Preparing Your Book</h3>
             <div id="ad-box"></div>
             <div id="timer">10</div>
-            <p>Your book is preparing...</p>
+            <p>Wait a moment...</p>
         </div>
     </div>
 
     <!-- PDF READER -->
     <div id="reader-modal">
         <div class="toolbar">
-            <i class="fas fa-times" onclick="history.back()" style="cursor:pointer; font-size: 1.2rem;"></i>
+            <i class="fas fa-times" onclick="closeReader()" style="cursor:pointer; font-size: 1.2rem;"></i>
             <span id="pg-info" style="font-weight: 600;">1 / --</span>
-            <div></div>
+            <!-- 2. Download Button on All Pages -->
+            <button class="btn-round" onclick="downloadCurrentPage()" style="background: var(--primary); color: white;">
+                <i class="fas fa-download"></i>
+            </button>
         </div>
         <div id="pdf-viewport">
             <div id="nav-left"></div>
@@ -107,122 +134,137 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // 3. Load & Grid (Flat UI)
+        let currentUrl = '', pdfDoc = null, pNum = 1, isReading = false;
+
+        // 5. Reload Warning
+        window.onbeforeunload = function() {
+            if(isReading) return "Are you sure you want to leave? Your progress is saved.";
+        };
+
+        // 5. Load Progress on Startup
+        window.onload = () => {
+            const savedUrl = localStorage.getItem('last_book');
+            const savedPage = localStorage.getItem('last_page');
+            if(savedUrl && savedPage) {
+                pNum = parseInt(savedPage);
+                startAd(savedUrl, true);
+            }
+        };
+
+        // Fetch Books
         db.collection('books').orderBy('createdAt', 'desc').onSnapshot(snap => {
-            document.getElementById('loading').style.display = 'none';
             const grid = document.getElementById('bookList'); grid.innerHTML = '';
             snap.forEach(doc => {
                 const b = doc.data();
                 grid.innerHTML += `
                 <div class="card">
-                    <img src="${b.banner}" onclick="startAd('${b.pdfUrl}')">
+                    <img src="${b.banner}" onclick="startAd('${b.pdfUrl}')" style="aspect-ratio: auto;">
                     <div class="action-btns">
-                        <button class="btn-round" onclick="downloadImage('${b.banner}', '${b.title}')" title="Download Image"><i class="fas fa-download"></i></button>
-                        <button class="btn-round" onclick="showInfo('${b.description || 'No description available'}')" title="Info"><i class="fas fa-info"></i></button>
+                        <button class="btn-round" onclick="downloadImage('${b.banner}', '${b.title}')"><i class="fas fa-download"></i></button>
+                        <button class="btn-round" onclick="alert('${b.description || 'No description'}')"><i class="fas fa-info"></i></button>
                     </div>
                     <div class="card-info" onclick="startAd('${b.pdfUrl}')">
                         <div class="card-title">${b.title}</div>
-                        <div class="card-meta">
-                            <span>${b.author}</span>
-                            <span>${b.pages} Pgs</span>
-                        </div>
+                        <div class="card-meta"><span>${b.author}</span><span>${b.pages} Pgs</span></div>
                     </div>
                 </div>`;
             });
         });
 
-        // 2. Download Image with Watermark
-        async function downloadImage(url, title) {
-            const img = new Image();
-            img.crossOrigin = "anonymous";
-            img.src = url;
+        // 2. Download Current PDF Page with Watermark
+        function downloadCurrentPage() {
+            const canvas = document.getElementById('canvas');
+            const tempCanvas = document.createElement('canvas');
+            const tCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            
+            tCtx.drawImage(canvas, 0, 0);
+            tCtx.fillStyle = "rgba(16, 185, 129, 0.7)";
+            tCtx.font = `bold ${tempCanvas.width/25}px Inter`;
+            tCtx.textAlign = "right";
+            tCtx.fillText("Nur's Library", tempCanvas.width - 30, tempCanvas.height - 30);
+            
+            const link = document.createElement('a');
+            link.download = `Page_${pNum}_NursLibrary.png`;
+            link.href = tempCanvas.toDataURL();
+            link.click();
+        }
+
+        function downloadImage(url, title) {
+            const img = new Image(); img.crossOrigin = "anonymous"; img.src = url;
             img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0);
-                
-                // Add Watermark
-                ctx.fillStyle = "rgba(16, 185, 129, 0.8)";
-                ctx.font = `bold ${canvas.width/20}px Inter`;
-                ctx.textAlign = "right";
-                ctx.fillText("Nur's Library", canvas.width - 20, canvas.height - 20);
-                
-                const link = document.createElement('a');
-                link.download = `${title}.png`;
-                link.href = canvas.toDataURL();
-                link.click();
+                const cvs = document.createElement('canvas'); const ctx = cvs.getContext('2d');
+                cvs.width = img.width; cvs.height = img.height; ctx.drawImage(img, 0, 0);
+                ctx.fillStyle = "rgba(16, 185, 129, 0.8)"; ctx.font = `bold ${cvs.width/15}px Inter`;
+                ctx.textAlign = "right"; ctx.fillText("Nur's Library", cvs.width - 20, cvs.height - 40);
+                const l = document.createElement('a'); l.download = `${title}.png`; l.href = cvs.toDataURL(); l.click();
             };
         }
 
-        // 3. Info Button
-        function showInfo(desc) { alert("Description:\n" + desc); }
-
-        // 1. Ad & Flip Reader Logic
-        let currentUrl = '', pdfDoc = null, pNum = 1;
-
-        function startAd(url) {
-            currentUrl = url; history.pushState({view: 'ad'}, '');
-            document.getElementById('ad-modal').style.display = 'flex';
-            const adBox = document.getElementById('ad-box'); adBox.innerHTML = '';
-            const sc = document.createElement('script'); sc.src = "https://pl28743379.effectivegatecpm.com/e8a4101484bcc312e8a1ce9f0d1eadac/invoke.js";
-            sc.async = true; adBox.appendChild(sc);
-            const div = document.createElement('div'); div.id = "container-e8a4101484bcc312e8a1ce9f0d1eadac"; adBox.appendChild(div);
+        function startAd(url, isResume = false) {
+            currentUrl = url;
+            if(isResume) { openReader(); return; }
             
+            history.pushState({view: 'ad'}, '');
+            document.getElementById('ad-modal').style.display = 'flex';
             let time = 10;
             const itv = setInterval(() => {
                 time--; document.getElementById('timer').innerText = time;
                 if(time <= 0) { clearInterval(itv); document.getElementById('ad-modal').style.display = 'none'; openReader(); }
             }, 1000);
-            window.onpopstate = () => { clearInterval(itv); document.getElementById('ad-modal').style.display = 'none'; document.getElementById('reader-modal').style.display = 'none'; };
         }
 
         async function openReader() {
-            history.replaceState({view: 'reader'}, '');
+            isReading = true;
+            localStorage.setItem('last_book', currentUrl);
             document.getElementById('reader-modal').style.display = 'flex';
             const loading = pdfjsLib.getDocument(currentUrl);
-            pdfDoc = await loading.promise; pNum = 1; renderPage(1);
+            pdfDoc = await loading.promise;
+            renderPage(pNum);
         }
 
         function renderPage(n) {
             const cvs = document.getElementById('canvas');
-            cvs.classList.remove('page-flipping'); // Reset animation
-            
             pdfDoc.getPage(n).then(pg => {
                 const ctx = cvs.getContext('2d'), vp = pg.getViewport({scale: 1.5});
                 cvs.height = vp.height; cvs.width = vp.width;
-                pg.render({canvasContext: ctx, viewport: vp});
+                pg.render({canvasContext: ctx, viewport: vp}).promise.then(() => {
+                    cvs.classList.remove('flip-next', 'flip-prev');
+                    document.getElementById('pdf-viewport').scrollTop = 0; // 4. Reset scroll on page change
+                });
                 document.getElementById('pg-info').innerText = n + " / " + pdfDoc.numPages;
+                localStorage.setItem('last_page', n);
             });
         }
 
-        // 1. Navigation Click Control
+        // 3 & 4. Navigation & Scroll
         document.getElementById('nav-right').onclick = () => {
             if(pNum < pdfDoc.numPages) {
-                const cvs = document.getElementById('canvas');
-                cvs.classList.add('page-flipping');
-                setTimeout(() => {
-                    pNum++;
-                    renderPage(pNum);
-                }, 400);
+                document.getElementById('canvas').classList.add('flip-next');
+                setTimeout(() => { pNum++; renderPage(pNum); }, 300;
             }
         };
-
         document.getElementById('nav-left').onclick = () => {
             if(pNum > 1) {
-                pNum--;
-                renderPage(pNum);
+                document.getElementById('canvas').classList.add('flip-prev');
+                setTimeout(() => { pNum--; renderPage(pNum); }, 300);
             }
         };
 
+        function closeReader() {
+            isReading = false;
+            localStorage.removeItem('last_book');
+            localStorage.removeItem('last_page');
+            document.getElementById('reader-modal').style.display = 'none';
+            if(pdfDoc) pdfDoc.destroy();
+        }
+
+        window.onpopstate = () => { closeReader(); document.getElementById('ad-modal').style.display = 'none'; };
         document.getElementById('searchInput').oninput = (e) => {
             const val = e.target.value.toLowerCase();
-            document.querySelectorAll('.card').forEach(c => {
-                c.style.display = c.innerText.toLowerCase().includes(val) ? 'block' : 'none';
-            });
+            document.querySelectorAll('.card').forEach(c => c.style.display = c.innerText.toLowerCase().includes(val) ? 'block' : 'none');
         };
-
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     </script>
 </body>
